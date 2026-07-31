@@ -607,6 +607,10 @@ if (CMAKE_GENERATOR MATCHES "Visual Studio")
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${CMAKE_SOURCE_DIR}/soh/assets/extractor ${CMAKE_BINARY_DIR}/soh/assets
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${CMAKE_SOURCE_DIR}/soh/assets/xml ${CMAKE_BINARY_DIR}/soh/assets/xml
+    # FD (ComboShip): deploy the curated Fierce Deity MM XML set + the bundled (non-Nintendo) originals so FdO2rGen
+    # can extract AND assemble fd.o2r from the MM ROM at runtime.
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${CMAKE_SOURCE_DIR}/soh/assets/fd_xml ${CMAKE_BINARY_DIR}/soh/assets/fd_xml
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${CMAKE_SOURCE_DIR}/soh/assets/fd_bundled ${CMAKE_BINARY_DIR}/soh/assets/fd_bundled
     )
 endif()
 if(NOT CMAKE_SYSTEM_NAME MATCHES "NintendoSwitch|CafeOS")
@@ -616,6 +620,10 @@ if(NOT CMAKE_SYSTEM_NAME MATCHES "NintendoSwitch|CafeOS")
         COMMENT "Copying asset xmls..."
         COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${CMAKE_SOURCE_DIR}/soh/assets/extractor $<TARGET_FILE_DIR:soh>/assets
         COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${CMAKE_SOURCE_DIR}/soh/assets/xml $<TARGET_FILE_DIR:soh>/assets/xml
+        # FD (ComboShip): deploy the curated Fierce Deity MM XML set + the bundled (non-Nintendo) originals so
+        # FdO2rGen can extract AND assemble fd.o2r from the MM ROM at runtime.
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${CMAKE_SOURCE_DIR}/soh/assets/fd_xml $<TARGET_FILE_DIR:soh>/assets/fd_xml
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${CMAKE_SOURCE_DIR}/soh/assets/fd_bundled $<TARGET_FILE_DIR:soh>/assets/fd_bundled
         COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:soh>/assets/symbols
     #    COMMAND ${VS_COPY_ASSETS_CMD}
     )

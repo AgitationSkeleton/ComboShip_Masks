@@ -5,6 +5,7 @@
 #include <ship/Context.h>
 #include <ship/resource/archive/O2rArchive.h>
 #include <ship/resource/File.h>
+#include <spdlog/spdlog.h> // FD (ComboShip): SPDLOG_INFO/ERROR for fd.o2r finalize diagnostics
 
 #include <atomic>
 #include <cstdint>
@@ -396,13 +397,37 @@ bool FdO2rGen::Generate(const std::string& installPath, const std::string& dataP
         return false;
     }
 
-    // 5. Move the finished fd.o2r into the app directory, next to oot.o2r.
-    const std::string finalPath = Ship::Context::GetAppDirectoryPath(appShortName) + "/fd.o2r";
+    // 5. Move the finished fd.o2r into the app directory, next to oot.o2r. Write it to the SAME directory the
+    // mount step resolves oot.o2r from (LocateFileAcrossAppDirs), so a portable install (o2rs beside the exe)
+    // and a data-dir install both land where OTRGlobals::Initialize will look. Cross-drive rename (temp is on
+    // the system drive, the app dir may be elsewhere) falls back to copy. Errors are logged, never swallowed.
+    std::string finalDir = Ship::Context::GetAppDirectoryPath(appShortName);
+    {
+        // Prefer the directory oot.o2r actually resolved to (portable: beside the exe), which is guaranteed to be
+        // a directory the mount searches; GetAppDirectoryPath can point at a data dir that isn't the o2r home.
+        std::string ootResolved = Ship::Context::LocateFileAcrossAppDirs("oot.o2r", appShortName);
+        if (!ootResolved.empty() && std::filesystem::exists(ootResolved)) {
+            finalDir = std::filesystem::absolute(ootResolved).parent_path().string();
+        }
+    }
+    const std::string finalPath = finalDir + "/fd.o2r";
     std::error_code ec;
+    std::filesystem::create_directories(finalDir, ec);
+    ec.clear();
     std::filesystem::rename(outPath, finalPath, ec);
     if (ec) {
-        std::filesystem::copy(outPath, finalPath, std::filesystem::copy_options::overwrite_existing, ec);
+        std::error_code cec;
+        std::filesystem::copy(outPath, finalPath, std::filesystem::copy_options::overwrite_existing, cec);
+        if (cec) {
+            SPDLOG_ERROR("[FD] fd.o2r finalize FAILED: could not place '{}' (rename: {}; copy: {})", finalPath,
+                         ec.message(), cec.message());
+        }
         std::filesystem::remove(outPath, ec);
+    }
+    if (std::filesystem::exists(finalPath)) {
+        SPDLOG_INFO("[FD] fd.o2r generated -> {}", finalPath);
+    } else {
+        SPDLOG_ERROR("[FD] fd.o2r finalize FAILED: '{}' does not exist after move", finalPath);
     }
     // ComboShip: fd.o2r is generated inline at OoT-side init from the MM ROM the combo extractor selected
     // (SOH_FD_MM_ROM env var), then mounted, and the game continues into the title screen — so do NOT quit
