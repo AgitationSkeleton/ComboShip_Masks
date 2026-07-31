@@ -2910,6 +2910,12 @@ void BossGanon_Update(Actor* thisx, PlayState* play2) {
     this->unk_1A2++;
     this->unk_1A4++;
 
+    // FD (aegiker RE->SoH port) BOSS PARITY: re-enable Z-targeting on Ganon for Fierce Deity (he clears his own
+    // attention flag above every frame) so FD can lock on and aim his sword beams at him. Targeting only.
+    if (LINK_IS_DEITY) {
+        this->actor.flags |= ACTOR_FLAG_ATTENTION_ENABLED;
+    }
+
     // block players attack if hes shooting something
     if ((this->actionFunc == BossGanon_Wait) || (this->actionFunc == BossGanon_Block)) {
         if (player->unk_A73 != 0) {

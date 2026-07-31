@@ -487,6 +487,27 @@ s32 EnSt_CheckHitBackside(EnSt* this, PlayState* play) {
  * Checks if the Skulltula's colliders have been hit, returns true if the hit has dealt damage to the Skulltula
  */
 s32 EnSt_CheckColliders(EnSt* this, PlayState* play) {
+    // FD (aegiker RE->SoH port) BOSS/ENEMY PARITY: a Fierce Deity great sword beam striking the Skulltula's armored
+    // FRONT one-shots it -- bypassing the "hit the back" requirement. The front collider (colCylinder[2]) registers
+    // the beam's 0x200 but EnSt_CheckHitFrontside below would negate it, so detect + kill BEFORE that.
+    if ((this->colCylinder[2].base.acFlags & AC_HIT) && EnMThunder_IsFdSwordBeam(this->colCylinder[2].base.ac)) {
+        this->colCylinder[2].base.acFlags &= ~AC_HIT;
+        this->swayTimer = this->stunTimer = 0;
+        this->gaveDamageSpinTimer = 1;
+        Animation_ChangeByInfo(&this->skelAnime, sAnimationInfo, ENST_ANIM_3);
+        this->takeDamageSpinTimer = this->skelAnime.animLength;
+        Actor_SetColorFilter(&this->actor, 0x4000, 0xC8, 0, this->takeDamageSpinTimer);
+        this->actor.colChkInfo.health = 0;
+        Enemy_StartFinishingBlow(play, &this->actor);
+        this->actor.flags &= ~ACTOR_FLAG_ATTENTION_ENABLED;
+        this->groundBounces = 3;
+        this->deathTimer = 20;
+        this->actor.gravity = -1.0f;
+        Audio_PlayActorSound2(&this->actor, NA_SE_EN_STALWALL_DEAD);
+        GameInteractor_ExecuteOnEnemyDefeat(&this->actor);
+        EnSt_SetupAction(this, EnSt_BounceAround);
+        return true;
+    }
     if (EnSt_CheckHitFrontside(this)) {
         // player has hit the front shield area of the Skulltula
         return false;

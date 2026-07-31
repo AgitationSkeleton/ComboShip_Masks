@@ -838,12 +838,29 @@ void BossFd2_CollisionCheck(BossFd2* this, PlayState* play) {
         this->collider.base.colType = COLTYPE_HIT3;
     }
 
-    if (this->collider.elements[0].info.bumperFlags & BUMP_HIT) {
+    // FD (aegiker RE->SoH port) BOSS PARITY: the FD great sword beam knocks Volvagia's armored head down like the
+    // Megaton Hammer. The head bumper rejects sword-tier hits, so detect the beam by PROXIMITY to the head instead.
+    s32 fdBeamHeadHit = false;
+    if (!bossFd->faceExposed) {
+        Actor* beam = play->actorCtx.actorLists[ACTORCAT_ITEMACTION].head;
+        while (beam != NULL) {
+            if (EnMThunder_IsFdSwordBeam(beam) &&
+                (fabsf(beam->world.pos.x - this->actor.focus.pos.x) < 45.0f) &&
+                (fabsf(beam->world.pos.y - this->actor.focus.pos.y) < 45.0f) &&
+                (fabsf(beam->world.pos.z - this->actor.focus.pos.z) < 45.0f)) {
+                fdBeamHeadHit = true;
+                break;
+            }
+            beam = beam->next;
+        }
+    }
+
+    if ((this->collider.elements[0].info.bumperFlags & BUMP_HIT) || fdBeamHeadHit) {
         this->collider.elements[0].info.bumperFlags &= ~BUMP_HIT;
 
         hurtbox = this->collider.elements[0].info.acHitInfo;
         if (!bossFd->faceExposed) {
-            if (hurtbox->toucher.dmgFlags & 0x40000040) {
+            if (fdBeamHeadHit || (hurtbox->toucher.dmgFlags & 0x40000040)) {
                 bossFd->actor.colChkInfo.health -= 2;
                 if ((s8)bossFd->actor.colChkInfo.health <= 2) {
                     bossFd->actor.colChkInfo.health = 1;

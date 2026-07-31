@@ -311,6 +311,24 @@ s32 BossDodongo_AteExplosive(BossDodongo* this, PlayState* play) {
         currentExplosive = currentExplosive->next;
     }
 
+    // FD (aegiker RE->SoH port) BOSS PARITY: King Dodongo swallows a Fierce Deity great sword beam near his open
+    // mouth exactly like a bomb. Scan the item-action list for a great beam within +-40 of mouthPos; on a hit, kill
+    // the beam and report "ate explosive" so the normal swallow -> internal explosion damage runs.
+    {
+        Actor* currentSwordbeam = play->actorCtx.actorLists[ACTORCAT_ITEMACTION].head;
+
+        while (currentSwordbeam != NULL) {
+            if (EnMThunder_IsFdSwordBeam(currentSwordbeam) &&
+                (fabsf(currentSwordbeam->world.pos.x - this->mouthPos.x) < 40.0f) &&
+                (fabsf(currentSwordbeam->world.pos.y - this->mouthPos.y) < 40.0f) &&
+                (fabsf(currentSwordbeam->world.pos.z - this->mouthPos.z) < 40.0f)) {
+                Actor_Kill(currentSwordbeam);
+                return true;
+            }
+            currentSwordbeam = currentSwordbeam->next;
+        }
+    }
+
     return false;
 }
 
