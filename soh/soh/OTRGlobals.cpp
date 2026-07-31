@@ -3321,6 +3321,21 @@ extern "C" __declspec(dllexport) void SOH_GrantCrossItem(const char* itemName) {
     SPDLOG_INFO("[ComboShip] SOH_GrantCrossItem: granted '{}' into OOT save", itemName);
 }
 
+// ComboShip: SHARED Fierce Deity's Mask. The FD mask is an MM item in ComboShip's cross-game rando; obtaining it
+// (in either game) must ALSO grant soh_fd's OOT Fierce Deity form -- the mask lives on gSaveContext.ship.
+// hasFierceDeityMask (not a real inventory item), so we just set that flag save-direct and persist it. This works
+// while OOT is the DORMANT game (the launcher calls it from the cross-item delivery seam). Idempotent.
+extern "C" __declspec(dllexport) void SOH_GrantFierceDeityMask(void) {
+    if (gSaveContext.ship.hasFierceDeityMask) {
+        return; // already owned
+    }
+    gSaveContext.ship.hasFierceDeityMask = 1;
+    if (SaveManager::Instance && gSaveContext.fileNum != 0xFF) {
+        SaveManager::Instance->SaveSection(gSaveContext.fileNum, SECTION_ID_BASE, true);
+    }
+    SPDLOG_INFO("[ComboShip] SOH_GrantFierceDeityMask: OOT Fierce Deity form unlocked (shared FD mask)");
+}
+
 // ComboShip: mark a foreign OOT check obtained without re-delivering — used on the NETWORK receive
 // path so a client that gets a teammate's broadcast won't later physically collect the same check
 // and double-deliver. Save-only (no grant), persisted immediately.

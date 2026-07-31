@@ -3920,6 +3920,13 @@ extern "C" void (*gMMComboMarkForeignObtained)(int srcGame, const char* checkNam
 extern "C" __declspec(dllexport) void MM_SetMarkForeignObtained(void (*cb)(int, const char*)) {
     gMMComboMarkForeignObtained = cb;
 }
+// ComboShip SHARED Fierce Deity's Mask: MM calls this (from Rando::GiveItem when it grants RI_MASK_FIERCE_DEITY,
+// native OR cross-delivered) so the launcher can ALSO unlock soh_fd's OOT Fierce Deity form. Covers the case where
+// the FD mask's rando check lives in MM's world (native grant, which never goes through the cross-deliver seam).
+extern "C" void (*gMMComboFierceDeityMaskObtained)(void) = nullptr;
+extern "C" __declspec(dllexport) void MM_SetFierceDeityMaskCb(void (*cb)(void)) {
+    gMMComboFierceDeityMaskObtained = cb;
+}
 // ComboShip: end-gating seam (mirrors OOT). z_boss_07.c calls gComboFinalBossDefeated when Majora dies.
 extern "C" int (*gComboFinalBossDefeated)(int game, int fileNum) = nullptr;
 extern "C" __declspec(dllexport) void MM_SetFinalBossDefeatedCb(int (*cb)(int, int)) {

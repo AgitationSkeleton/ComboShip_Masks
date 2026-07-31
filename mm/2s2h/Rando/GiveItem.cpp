@@ -12,7 +12,16 @@ extern "C" {
 bool Rando::gComboDormantGive = false;
 #endif
 
+// ComboShip SHARED Fierce Deity's Mask: registered by the launcher (MM_SetFierceDeityMaskCb). Called below whenever
+// MM grants the FD mask so soh_fd's OOT Fierce Deity form is unlocked too. Defined in BenPort.cpp.
+extern "C" void (*gMMComboFierceDeityMaskObtained)(void);
+
 void Rando::GiveItem(RandoItemId randoItemId) {
+    // ComboShip SHARED FD MASK: fire before the grant so both native (MM-world check) and cross-delivered
+    // (MM_GrantCrossItem -> Combo_MM_GiveDormantResolved) FD-mask grants unlock the OOT Fierce Deity form.
+    if (randoItemId == RI_MASK_FIERCE_DEITY && gMMComboFierceDeityMaskObtained != nullptr) {
+        gMMComboFierceDeityMaskObtained();
+    }
     switch (randoItemId) {
         case RI_CLOCK_TOWN_STRAY_FAIRY:
             SET_WEEKEVENTREG(WEEKEVENTREG_08_80);

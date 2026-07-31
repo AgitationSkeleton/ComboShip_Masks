@@ -594,6 +594,11 @@ static FnSetCrossRoute SOH_SetMarkForeignObtained = nullptr;
 static FnSetCrossRoute MM_SetMarkForeignObtained = nullptr;
 static FnGrantCrossItem SOH_MarkForeignObtained = nullptr;
 static FnGrantCrossItem MM_MarkForeignObtained = nullptr;
+// ComboShip: SHARED Fierce Deity's Mask. Obtaining the (MM) FD mask must also unlock soh_fd's OOT Fierce Deity form.
+typedef void (*FnGrantFierceDeityMask)(void);
+static FnGrantFierceDeityMask SOH_GrantFierceDeityMask = nullptr;
+typedef void (*FnSetFierceDeityMaskCb)(void (*)(void));
+static FnSetFierceDeityMaskCb MM_SetFierceDeityMaskCb = nullptr;
 
 // ComboShip: gate the ending on BOTH final bosses. Each game calls the registered callback when its
 // final boss dies (OOT Ganon / MM Majora): it records the kill in the per-slot completion sidecar and
@@ -937,12 +942,26 @@ static void ResetCrossItemDedupForSeed(uint32_t seed) {
     }
 }
 
+// ComboShip SHARED Fierce Deity's Mask: MM calls this (registered via MM_SetFierceDeityMaskCb) whenever it grants
+// the FD mask, so the OOT Fierce Deity form is unlocked too. Idempotent on the OOT side.
+static void OnMmFierceDeityMaskObtained() {
+    if (SOH_GrantFierceDeityMask)
+        SOH_GrantFierceDeityMask();
+}
+
 static void DeliverCrossItem(int targetGame, const char* itemName, const char* srcCheckName) {
     if (srcCheckName && srcCheckName[0] != '\0') {
         std::lock_guard<std::mutex> lock(sAppliedCrossChecksMutex);
         if (!sAppliedCrossChecks.insert(srcCheckName).second) {
             return; // already delivered for this check
         }
+    }
+    // ComboShip SHARED Fierce Deity's Mask: the (MM) FD mask ALSO unlocks soh_fd's OOT Fierce Deity form, so the
+    // mask is shared across both games -- in addition to its usual grant in the home game below. Idempotent
+    // (SOH_GrantFierceDeityMask no-ops if already owned). Matches the OOT-world-check delivery direction; the
+    // MM-world-check (native MM grant) case is covered by MM's own FD-mask grant notifying OOT.
+    if (itemName != nullptr && SOH_GrantFierceDeityMask != nullptr && strstr(itemName, "Fierce Deity") != nullptr) {
+        SOH_GrantFierceDeityMask();
     }
     if (targetGame == 1) {
         if (MM_GrantCrossItem)
@@ -2169,6 +2188,9 @@ int main(int argc, char** argv) {
     MM_SetMarkForeignObtained = (FnSetCrossRoute)GetSym(mmModule, "MM_SetMarkForeignObtained");
     SOH_MarkForeignObtained = (FnGrantCrossItem)GetSym(sohModule, "SOH_MarkForeignObtained");
     MM_MarkForeignObtained = (FnGrantCrossItem)GetSym(mmModule, "MM_MarkForeignObtained");
+    // Shared FD mask: OOT-side grant of soh_fd's Fierce Deity form flag + MM-side notify seam.
+    SOH_GrantFierceDeityMask = (FnGrantFierceDeityMask)GetSym(sohModule, "SOH_GrantFierceDeityMask");
+    MM_SetFierceDeityMaskCb = (FnSetFierceDeityMaskCb)GetSym(mmModule, "MM_SetFierceDeityMaskCb");
     SOH_SetFinalBossDefeatedCb = (FnSetBossDefeatedCb)GetSym(sohModule, "SOH_SetFinalBossDefeatedCb");
     MM_SetFinalBossDefeatedCb = (FnSetBossDefeatedCb)GetSym(mmModule, "MM_SetFinalBossDefeatedCb");
 
@@ -2350,6 +2372,10 @@ int main(int argc, char** argv) {
         SOH_SetMarkForeignObtained(MarkForeignObtained);
     if (MM_SetMarkForeignObtained)
         MM_SetMarkForeignObtained(MarkForeignObtained);
+    // Shared FD mask: let MM notify the launcher when it grants the Fierce Deity's Mask (native or cross), so the
+    // OOT Fierce Deity form unlocks too -- covers the MM-world-check case the OOT cross-deliver hook can't see.
+    if (MM_SetFierceDeityMaskCb)
+        MM_SetFierceDeityMaskCb(OnMmFierceDeityMaskObtained);
     // A6: register the per-frame dormant-pump seam into both DLLs.
     if (SOH_SetPumpDormant)
         SOH_SetPumpDormant(PumpDormant);
