@@ -55,10 +55,18 @@
 
 #define LINK_IS_ADULT (gSaveContext.linkAge == LINK_AGE_ADULT)
 #define LINK_IS_CHILD (gSaveContext.linkAge == LINK_AGE_CHILD)
+// Fierce Deity (aegiker RE->SoH port 2026-07-11). FD-only: 3 humanoid forms (adult/child/deity).
+#define LINK_IS_DEITY (gSaveContext.linkAge == LINK_AGE_DEITY)
+#define LINK_IS_HUMAN (LINK_IS_ADULT || LINK_IS_CHILD)
+#define YEARS_DEITY 80
+// FD (2026-07-11): number of forms with baked LOD DL tables ([3near][3far] = adult/child/deity). The player LOD
+// tables are strided by this, NOT by LINK_AGE_MAX; keeping it 3 preserves the vanilla [3][3] table layout.
+#define NUM_DL_FORMS 3
 
 #define YEARS_CHILD 5
 #define YEARS_ADULT 17
-#define LINK_AGE_IN_YEARS (!LINK_IS_ADULT ? YEARS_CHILD : YEARS_ADULT)
+// DEITY-tolerant: FD must not be misclassified as child by the !LINK_IS_ADULT test.
+#define LINK_AGE_IN_YEARS (!LINK_IS_DEITY ? (!LINK_IS_ADULT ? YEARS_CHILD : YEARS_ADULT) : YEARS_DEITY)
 
 #define CLOCK_TIME(hr, min) ((s32)(((hr) * 60 + (min)) * (f32)0x10000 / (24 * 60) + 0.5f))
 

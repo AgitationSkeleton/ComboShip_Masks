@@ -1498,7 +1498,17 @@ typedef struct PlayState {
     /* 0x12430 */ char unk_12430[0xE8];
     // SOH [Custom Models] MTX tracker for flex based skeletons
     Mtx** flexLimbOverrideMTX;
+    // FD (2026-07-11): Fierce Deity transform white-fade driver (RE z64.h:921-923). Appended at struct
+    // TAIL for SoH offset stability. ageChangeFlag = target linkAge while a transform fade is running,
+    // -1 = idle; the z_play fade block ramps ageChangeFadeAlpha up while >= 0 and back down while < 0.
+    s8 ageChangeFlag;
+    u8 ageChangeTimer;     // frames to avoid drawing Link at the fully-white fade apex
+    s16 ageChangeFadeAlpha;
 } PlayState; // size = 0x12518
+
+// FD (2026-07-11) transform fade tuning (RE z64.h:103-104)
+#define TRANSFORM_EXTRA_FADE_FRAMES 130
+#define TRANSFORM_FADE_SPEED 45
 
 typedef struct {
     /* 0x0000 */ GameState state;

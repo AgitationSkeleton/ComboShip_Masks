@@ -1401,7 +1401,12 @@ f32 Actor_HeightDiff(Actor* actorA, Actor* actorB) {
 f32 Player_GetHeight(Player* player) {
     f32 offset = (player->stateFlags1 & PLAYER_STATE1_ON_HORSE) ? 32.0f : 0.0f;
 
-    if (LINK_IS_ADULT) {
+    // FD (2026-07-12): Fierce Deity's camera height. 2ship uses 124.0f, but 2ship draws FD at a different scale --
+    // OUR port renders him at draw scale 0.015 (Player_Draw) vs adult's 0.01, so his actual VISUAL head height is
+    // adult's 68 * (0.015/0.01) = ~102, not 124. Must stay non-zero -- 0 = Camera_Normal1 FPE.
+    if (LINK_IS_DEITY) {
+        return offset + 102.0f;
+    } else if (LINK_IS_ADULT) {
         return offset + 68.0f;
     } else {
         return offset + 44.0f;

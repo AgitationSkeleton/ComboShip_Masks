@@ -518,6 +518,14 @@ static const ALIGN_ASSET(2) char gGrabTex[] = dgGrabTex;
 #define dgRocsFeatherItemNameENGTex "__OTR__textures/item_name_static/gRocsFeatherItemNameENGTex"
 static const ALIGN_ASSET(2) char gRocsFeatherItemNameENGTex[] = dgRocsFeatherItemNameENGTex;
 
+// Fierce Deity custom UI textures (aegiker RE->SoH port; ship in fd.o2r at runtime). FD 2026-07-11.
+#define dgFierceDeityMaskTex "__OTR__textures/icon_item_static/gFierceDeityMaskTex"
+static const ALIGN_ASSET(2) char gFierceDeityMaskTex[] = dgFierceDeityMaskTex;
+#define dgFierceDeitySwordTex "__OTR__textures/icon_item_static/gFierceDeitySwordTex"
+static const ALIGN_ASSET(2) char gFierceDeitySwordTex[] = dgFierceDeitySwordTex;
+#define dgFierceDeityMaskItemNameENGTex "__OTR__textures/item_name_static/gFierceDeityMaskItemNameENGTex"
+static const ALIGN_ASSET(2) char gFierceDeityMaskItemNameENGTex[] = dgFierceDeityMaskItemNameENGTex;
+
 #define dgRocsFeatherItemNameGERTex "__OTR__textures/item_name_static/gRocsFeatherItemNameGERTex"
 static const ALIGN_ASSET(2) char gRocsFeatherItemNameGERTex[] = dgRocsFeatherItemNameGERTex;
 

@@ -1,10 +1,10 @@
+#include <ship/resource/ResourceManager.h>
 #include "Skeleton.h"
 #include "soh/OTRGlobals.h"
+#include "libultraship/libultraship.h"
 #include <soh_assets.h>
 #include <objects/object_link_child/object_link_child.h>
 #include <objects/object_link_boy/object_link_boy.h>
-#include <ship/Context.h>
-#include <ship/resource/ResourceManager.h>
 
 extern "C" {
 #include "variables.h"
@@ -108,7 +108,16 @@ void SkeletonPatcher::ClearSkeletons() {
 void SkeletonPatcher::UpdateSkeletons() {
     auto resourceMgr = Ship::Context::GetRawInstance()->GetResourceManager();
     bool isAlt = resourceMgr->IsAltAssetsEnabled();
+    // FD (2026-07-15): while the local player is Fierce Deity, his skelAnime is registered under the stale base-age
+    // path; reloading that here on the alt-assets toggle (OTRGlobals.cpp) would repoint the FD body back to base-age
+    // Link (the "giant Young Link + FD skeleton" corruption). FD assets live at base paths (no alt/ variant), so the
+    // FD skeleton never needs an alt swap -- skip the local player's skels while transformed. Other (non-player)
+    // skeletons still swap normally. See the matching guard in UpdateCustomSkeletons.
+    bool isDeity = (gPlayState != nullptr) && (gSaveContext.linkAge == LINK_AGE_DEITY);
     for (auto& skel : skeletons) {
+        if (skel.isLocalPlayer && isDeity) {
+            continue;
+        }
         Skeleton* newSkel =
             (Skeleton*)resourceMgr
                 ->LoadResource((isAlt ? Ship::IResource::gAltAssetPrefix : "") + skel.vanillaSkeletonPath, true)
@@ -124,6 +133,17 @@ void SkeletonPatcher::UpdateSkeletons() {
 }
 
 void SkeletonPatcher::UpdateCustomSkeletons() {
+    // FD (2026-07-15): while the local player is Fierce Deity his skelAnime is still REGISTERED under the stale
+    // base-age path (gLinkAdultSkel/gLinkChildSkel from Player_InitCommon), even though its skeleton pointer already
+    // points at the FD skeleton. Tunic-patching it here -- notably on the OnAssetAltChange hook when the player Tabs
+    // the mods/alt-assets toggle -- repoints the FD body back to young/adult Link, producing the reported "giant
+    // Young Link with FD skeleton + broken face" corruption. FD is never tunic-patched (its path is excluded from
+    // IsLinkSkeletonPath), so skip the whole pass while transformed; the FD model is a vanilla-of-this-fork asset
+    // and must be left alone. Reverting FD->human re-registers the base age via Player_ChangeAge, restoring normal
+    // tunic patching. (Same root cause as the pause-menu FD BUG 5 workaround in z_player_lib.c.)
+    if (gPlayState != nullptr && gSaveContext.linkAge == LINK_AGE_DEITY) {
+        return;
+    }
     for (auto& skel : skeletons) {
         if (!skel.isLocalPlayer) {
             continue;

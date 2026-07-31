@@ -800,7 +800,8 @@ void DrawFlagsTab() {
             DrawGroupWithBorder(
                 [&]() {
                     ImGui::Text("stateFlags3");
-                    DrawFlagArray8("stateFlags3", player->stateFlags3, THEME_COLOR);
+                    // FD (2026-07-12): stateFlags3 widened u8->u16 (bit 8 = PLAYER_STATE3_TRANSFORMATION_MASK).
+                    DrawFlagArray16("stateFlags3", player->stateFlags3, THEME_COLOR);
                 },
                 "stateFlags3");
 

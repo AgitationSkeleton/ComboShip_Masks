@@ -2168,6 +2168,25 @@ void func_800FA3DC(void);
 u8 func_800FAD34(void);
 void Audio_ResetActiveSequences(void);
 void func_800FAEB4(void);
+
+// #region SOH [Fierce Deity] aegiker RE->SoH port declarations
+void Math_Vec3f_ScaleAndStore(Vec3f* vec, f32 scale, Vec3f* dest);          // FD (2026-07-11)
+void Math_Vec3f_SumScaled(Vec3f* a, Vec3f* b, f32 scale, Vec3f* dest);      // FD (2026-07-11)
+void Math_Vec3f_AddRand(Vec3f* orig, f32 scale, Vec3f* dest);              // FD (2026-07-11)
+void Math_Vec3f_DistXYZAndStoreNormDiff(Vec3f* a, Vec3f* b, f32 scale, Vec3f* dest); // FD (2026-07-11)
+s32 EnMThunder_IsFdSwordBeam(Actor* actor); // FD (2026-07-12): boss-parity predicate (see z_en_m_thunder.c)
+u8 Player_GetFdTransformAnimId(Player* this);                     // FD (2026-07-12): Anchor transform-mask networking
+void Player_SetFdTransformAnimById(Player* this, u8 id, f32 curFrame); // FD (2026-07-12): Anchor transform-mask apply
+s32 Player_IsFierceDeityAllowed(PlayState* play); // FD (2026-07-12): boss-lair/fishing-hole zone gate
+u8 Parameter_CanUseItem(u32 item); // FD (2026-07-12): Fierce Deity item-usability predicate (graying + gating)
+// FD (2026-07-11): Fierce Deity mask acquisition helpers (src/code/fierce_deity_items.c).
+void FierceDeity_EquipMaskToCButton(void);
+void GiveFierceDeityMask(void);
+bool FdAudio_PlayOneShot(const char* path); // FD (2026-07-12): play a custom WAV directly (bypasses the N64 seq system); returns true if queued
+void FdVoice_ApplyForm(s32 isDeity); // FD (2026-07-13): per-form native swap of MM's re-recorded adult-Link voice grunts in font 0
+void FdOcarina_EnsurePinned(void); // FD (2026-07-13): preload+pin FD ocarina resources so the draw never does a racy load
+void FdAudio_StopOneShots(void);            // FD (2026-07-12): stop all custom WAV one-shots (transform-skip interrupt)
+// #endregion
 void GfxPrint_SetColor(GfxPrint* this, u32 r, u32 g, u32 b, u32 a);
 void GfxPrint_SetPosPx(GfxPrint* this, s32 x, s32 y);
 void GfxPrint_SetPos(GfxPrint* this, s32 x, s32 y);

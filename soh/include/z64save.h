@@ -55,7 +55,8 @@ typedef enum {
     /* 2 */ MAGIC_CONSUME_NOW_ALT, // Identical behaviour to MAGIC_CONSUME_NOW. Unused
     /* 3 */ MAGIC_CONSUME_LENS, // Lens consumption
     /* 4 */ MAGIC_CONSUME_WAIT_PREVIEW, // Sets consume target but waits to consume. Draws yellow magic to target consumption
-    /* 5 */ MAGIC_ADD // Sets a target to add magic
+    /* 5 */ MAGIC_ADD, // Sets a target to add magic
+    /* 6 */ MAGIC_CONSUME_DEITY_BEAM // FD (2026-07-11): Fierce Deity sword beam -- subtract exactly `amount` immediately (RE z_parameter.c:2928)
 } MagicChangeType;
 
 #define MAGIC_NORMAL_METER 0x30
@@ -255,6 +256,14 @@ typedef struct ShipSaveContextData {
     u8 filenameLanguage;
     //TODO: Move non-rando specific flags to a new sohInf and move the remaining randomizerInf to ShipRandomizerSaveContextData
     u16 randomizerInf[(RAND_INF_MAX + 15) / 16];
+    // FD (2026-07-11): transform state kept here (gSaveContext.ship.*) so it PERSISTS across scene
+    // transitions (Player fields reset on scene load -> was reverting FD to Adult instead of the real age).
+    // Appended at struct TAIL to avoid shifting any existing field offsets.
+    u8 fierceDeityPreviousForm;   // linkAge to revert to when the mask is removed (0xFF = not transformed)
+    u8 fierceDeityBButtonMemory;  // B-button item stashed while FD holds its sword (ITEM_NONE = none)
+    // FD (2026-07-11): set to 1 once the Fierce Deity's Mask has been obtained. Non-rando persistent flag used
+    // to gate the kaleido bottle-slot cycle and the item-tracker entry. Appended at TAIL (no offset shifts).
+    u8 hasFierceDeityMask;
 } ShipSaveContextData;
 
 #pragma endregion
@@ -449,7 +458,9 @@ typedef enum {
 
 typedef enum {
     /* 0 */ LINK_AGE_ADULT,
-    /* 1 */ LINK_AGE_CHILD
+    /* 1 */ LINK_AGE_CHILD,
+    /* 2 */ LINK_AGE_DEITY, // Fierce Deity form (aegiker RE port 2026-07-11); 3-5 reserved for goron/zora/deku
+    /* 3 */ LINK_AGE_MAX
 } LinkAge;
 
 

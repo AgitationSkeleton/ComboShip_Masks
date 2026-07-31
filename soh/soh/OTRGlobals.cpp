@@ -10,6 +10,9 @@
 #include <vector>
 #include <chrono>
 #include <optional>
+#include <mutex>            // FD (2026-07-12): FdAudio one-shot mixer synchronization
+#include <unordered_map>    // FD (2026-07-12): FdAudio PCM cache
+#include <dr_wav.h>         // FD (2026-07-12): custom-WAV one-shot decode for FdAudio_PlayOneShot
 #include <imgui.h>
 
 #include "ResourceManagerHelpers.h"
@@ -1132,6 +1135,243 @@ int AudioPlayer_Buffered(void);
 extern "C" int AudioPlayer_GetDesiredBuffered(void);
 std::unordered_map<std::string, ExtensionEntry> ExtensionCache;
 
+
+// FD (2026-07-12) ★ARBITRARY-WAV ONE-SHOT PLAYER (the definitive audio fix). The FD custom transform/fanfare sounds
+// are streamed N64 sequences that LOAD (ducking the BGM) but stay SILENT through the seq/soundfont path, no matter
+// the player or SEQ_MODE. Bypass the entire N64 audio system: decode the source WAVs with drwav and MIX them straight
+// into the audio-thread output buffer (32 kHz interleaved-S16 stereo, the rate AudioMgr_CreateNextAudioBuffer fills).
+// This cannot duck/evict BGM (it just sums on top of the already-synthesized frame), needs no seq player / custom
+// font / seqReplaced. Triggered from z_player.c via FdAudio_PlayOneShot(<wav resource path>).
+static std::mutex sFdAudioMutex;
+static std::unordered_map<std::string, std::vector<int16_t>> sFdPcmCache; // path -> 32kHz interleaved-stereo S16
+struct FdActiveOneShot {
+    const std::vector<int16_t>* pcm = nullptr;
+    size_t cursorFrames = 0;
+};
+static std::vector<FdActiveOneShot> sFdActiveOneShots;
+
+// Decode a WAV resource from the loaded archives (e.g. fd.o2r) and linear-resample to 32 kHz interleaved-stereo S16.
+// Cached by path (first play decodes; later plays are instant). Returns nullptr on failure.
+static const std::vector<int16_t>* FdAudio_GetPcm(const std::string& path) {
+    auto it = sFdPcmCache.find(path);
+    if (it != sFdPcmCache.end()) {
+        return &it->second;
+    }
+    std::vector<int16_t> out;
+    auto file = Ship::Context::GetRawInstance()->GetResourceManager()->GetArchiveManager()->LoadFile(path);
+    if (file != nullptr && file->Buffer != nullptr && !file->Buffer->empty()) {
+        drwav wav;
+        if (drwav_init_memory(&wav, file->Buffer->data(), file->Buffer->size(), nullptr)) {
+            drwav_uint64 numFrames = 0;
+            drwav_get_length_in_pcm_frames(&wav, &numFrames);
+            const uint32_t ch = wav.channels ? wav.channels : 1;
+            std::vector<int16_t> src((size_t)numFrames * ch);
+            drwav_read_pcm_frames_s16(&wav, numFrames, src.data());
+            const uint32_t dstRate = 32000; // AudioMgr_CreateNextAudioBuffer output rate (see SAMPLES_HIGH/LOW below)
+            const uint32_t srcRate = wav.sampleRate ? wav.sampleRate : dstRate;
+            const size_t dstFrames = (size_t)((double)numFrames * dstRate / srcRate);
+            out.resize(dstFrames * 2);
+            for (size_t i = 0; i < dstFrames; i++) {
+                const double srcPos = (double)i * srcRate / dstRate;
+                const size_t s0 = (size_t)srcPos;
+                const size_t s1 = (s0 + 1 < (size_t)numFrames) ? s0 + 1 : s0;
+                const double frac = srcPos - (double)s0;
+                for (int c = 0; c < 2; c++) {
+                    const uint32_t srcCh = (ch >= 2) ? (uint32_t)c : 0u;
+                    const int16_t a = src[s0 * ch + srcCh];
+                    const int16_t b = src[s1 * ch + srcCh];
+                    out[i * 2 + c] = (int16_t)(a + (int)((b - a) * frac));
+                }
+            }
+            drwav_uninit(&wav);
+        }
+    }
+    auto res = sFdPcmCache.emplace(path, std::move(out));
+    return res.first->second.empty() ? nullptr : &res.first->second;
+}
+
+// Returns true if the WAV was found and queued (so callers can fall back to a vanilla sfx when the custom
+// resource is missing, e.g. an old fd.o2r without the FD fall-voice samples). FD (2026-07-13).
+extern "C" bool FdAudio_PlayOneShot(const char* path) {
+    if (path == nullptr) {
+        return false;
+    }
+    std::lock_guard<std::mutex> lock(sFdAudioMutex);
+    const std::vector<int16_t>* pcm = FdAudio_GetPcm(path);
+    if (pcm == nullptr) {
+        return false;
+    }
+    for (auto& os : sFdActiveOneShots) {
+        if (os.pcm == nullptr) {
+            os.pcm = pcm;
+            os.cursorFrames = 0;
+            return true;
+        }
+    }
+    if (sFdActiveOneShots.size() < 6) {
+        sFdActiveOneShots.push_back({ pcm, 0 });
+        return true;
+    }
+    return false;
+}
+
+// Stop all active FD one-shots immediately (e.g. when the transform/revert cutscene is A-skipped).
+extern "C" void FdAudio_StopOneShots(void) {
+    std::lock_guard<std::mutex> lock(sFdAudioMutex);
+    for (auto& os : sFdActiveOneShots) {
+        os.pcm = nullptr;
+    }
+}
+
+// FD (2026-07-13) NATIVE per-form voice swap. MM's Fierce Deity uses the SAME voice library as OoT adult Link,
+// EXCEPT a set of hurt / effort grunts that MM re-recorded (identified by content-diffing MM's Soundfont_0 against
+// OoT's 00_Sound_Effects_1: the attack / strong-attack / falling / hup / gasp samples are byte-identical, these
+// slots are not). Instead of the arbitrary-WAV mixer (wrong pitch, no reverb, hand-guessed contexts), we swap the
+// actual sample POINTER inside the live font 0 while FD is active, so the game's own synthesizer plays MM's grunt
+// in the EXACT context OoT plays its grunt -- native playback, correct context by construction, and ONLY for
+// Fierce Deity (normal Adult Link's voice is left untouched). SoH samples are RAM-resident resources
+// (AudioLoad_RelocateSample is a no-op), so a direct pointer swap is immediately playable. Slot = the font-0
+// soundEffect index; the MM replacement sample lives in fd.o2r at custom/fd_voice/<slot>.
+extern "C" SoundFontSound* Audio_GetSfx(s32 fontId, s32 sfxId);
+extern "C" s32 AudioLoad_IsFontLoadComplete(s32 fontId);
+
+static const struct {
+    s32 slot;
+    const char* path;
+} sFdVoiceMap[] = {
+    // FD (2026-07-13) NARROWED: MM's font-0 only holds real Fierce Deity samples for the slots FD actually uses in
+    // MM -- the hurt / knocked-back grunts (9..0xE). The slots FD never uses in MM (climb-edge 0x07, dangling-grunt
+    // 0x06, dangling-gasp 0x08/0x19, gasp3 0x12, pant 0x13/0x17, painful-landing 0x18) hold OTHER-form (Goron)
+    // samples, so swapping them played Goron sounds in FD's climb/bonk/fall-damage contexts. Keep only the hurt
+    // family; leave the rest on OoT's adult voice.
+    { 0x09, "custom/fd_voice/09" }, // Hurt 1
+    { 0x0A, "custom/fd_voice/0A" }, // Hurt 2
+    { 0x0B, "custom/fd_voice/0B" }, // Hurt 3
+    { 0x0C, "custom/fd_voice/0C" }, // Hurt 4
+    { 0x0D, "custom/fd_voice/0D" }, // Knocked Back
+    { 0x0E, "custom/fd_voice/0E" }, // Hurt 5
+    // Fall damage: OoT slot 0x18 (Painful Landing). MM's 0x18 is a Goron sound; per user, FD's fall-damage should
+    // be the FD Hurt-4 grunt -- point it at that sample instead of the goron one.
+    { 0x18, "custom/fd_voice/0C" }, // Painful Landing (fall damage) -> FD Hurt 4
+};
+#define FD_VOICE_COUNT (sizeof(sFdVoiceMap) / sizeof(sFdVoiceMap[0]))
+static SoundFontSample* sFdVoiceMMSample[FD_VOICE_COUNT] = { 0 };
+static SoundFontSample* sFdVoiceOoTSample[FD_VOICE_COUNT] = { 0 };
+static std::vector<std::shared_ptr<Ship::IResource>> sFdVoiceResHold;
+static bool sFdVoiceLoaded = false;
+static s32 sFdVoiceApplied = -1; // -1 = unset, 0 = OoT samples live, 1 = MM (deity) samples live
+
+static void FdVoice_LoadSamples() {
+    auto rm = Ship::Context::GetRawInstance()->GetResourceManager();
+    for (size_t i = 0; i < FD_VOICE_COUNT; i++) {
+        auto res = rm->LoadResourceProcess(sFdVoiceMap[i].path);
+        if (res != nullptr) {
+            sFdVoiceResHold.push_back(res); // keep the resource alive; the Sample* points into its memory
+            sFdVoiceMMSample[i] = static_cast<SoundFontSample*>(res->GetRawPointer());
+        }
+    }
+    sFdVoiceLoaded = true;
+}
+
+// FD (2026-07-13) OCARINA CRASH FIX: preload + PIN the FD ocarina resources on the GAME thread. The reported crash
+// was ResourceMgr_LoadGfxByName(gLinkFierceDeityRightHandNearDL) returning NULL at DRAW time (crash in
+// Player_OverrideLimbDrawGameplayDefault, z_player_lib.c:1552) -> access violation. The FD bare-hand DL and the two
+// ocarina meshes are custom fd.o2r resources, and the fairy ocarina additionally pulls in the CHILD object's
+// vtx/tex; loading those lazily mid-draw (especially after the fairy path churns the resource cache) can fail. By
+// loading them once here on the game thread and holding a shared_ptr (so they can never be evicted), every
+// draw-time lookup becomes a cache hit. Idempotent; retries until all five are resident.
+static std::vector<std::shared_ptr<Ship::IResource>> sFdOcarinaPins;
+static bool sFdOcarinaPinned = false;
+extern "C" void FdOcarina_EnsurePinned(void) {
+    if (sFdOcarinaPinned) {
+        return;
+    }
+    // The FD hand itself is gLinkFierceDeityRightHandDL, part of the always-loaded FD model, so it needs no pin.
+    // Only the ocarina-mesh overlays (drawn in Player_PostLimbDrawGameplay) reference resources that can churn out
+    // -- the OoT mesh (adult object) and the Fairy mesh (child object, unloaded while FD is active).
+    static const char* paths[] = {
+        "objects/object_link_boy/gFdOotOcarinaDL",               // FD-held Ocarina of Time mesh
+        "objects/object_link_boy/gFdFairyOcarinaDL",             // FD-held Fairy Ocarina mesh
+        "objects/object_link_child/object_link_childVtx_00E3D0", // fairy ocarina vertices (child object)
+        "objects/object_link_child/gLinkChildFairyOcarinaTex",   // fairy ocarina texture (child object)
+    };
+    static bool done[ARRAY_COUNT(paths)] = { false };
+    auto rm = Ship::Context::GetRawInstance()->GetResourceManager();
+    bool allOk = true;
+    for (size_t i = 0; i < ARRAY_COUNT(paths); i++) {
+        if (done[i]) {
+            continue; // already resident + held; never release it (releasing could re-introduce the racy reload)
+        }
+        auto res = rm->LoadResourceProcess(paths[i]);
+        if (res != nullptr) {
+            sFdOcarinaPins.push_back(res);
+            done[i] = true;
+        } else {
+            allOk = false; // not mounted yet -- retry next frame
+        }
+    }
+    if (allOk) {
+        sFdOcarinaPinned = true;
+    }
+}
+
+// isDeity: 1 = Fierce Deity active (use MM's grunts), 0 = normal form (use OoT's). Called every gameplay frame; it
+// early-outs unless the form changed. Font 0 (the always-resident SFX bank) never reloads mid-game, so the captured
+// OoT originals stay valid. If fd.o2r lacks the samples, sFdVoiceMMSample[i] stays NULL and that slot is left as
+// OoT (graceful degrade).
+extern "C" void FdVoice_ApplyForm(s32 isDeity) {
+    if (!AudioLoad_IsFontLoadComplete(0)) {
+        return; // font 0 not ready yet (boot / audio reset)
+    }
+    if (!sFdVoiceLoaded) {
+        FdVoice_LoadSamples();
+    }
+    if (sFdVoiceApplied == isDeity) {
+        return;
+    }
+    for (size_t i = 0; i < FD_VOICE_COUNT; i++) {
+        SoundFontSound* se = Audio_GetSfx(0, sFdVoiceMap[i].slot);
+        if (se == NULL) {
+            continue;
+        }
+        if (sFdVoiceOoTSample[i] == NULL) {
+            sFdVoiceOoTSample[i] = se->sample; // capture the OoT original ONCE, before any swap
+        }
+        SoundFontSample* want = isDeity ? sFdVoiceMMSample[i] : sFdVoiceOoTSample[i];
+        if (want != NULL) {
+            se->sample = want;
+        }
+    }
+    sFdVoiceApplied = isDeity;
+}
+
+// Mix active FD one-shots into the interleaved-stereo S16 output buffer (`frames` frames). Audio-thread only.
+static void FdAudio_Mix(int16_t* buf, size_t frames) {
+    std::lock_guard<std::mutex> lock(sFdAudioMutex);
+    // Match the game's audio config: the N64 synthesis already bakes master+category volume into `buf`, but our
+    // one-shots are mixed AFTER synthesis, so apply master*SFX ourselves (else they blast at full amplitude while
+    // the game plays at the default 40% master). Read once per tick (not per sample). Defaults mirror the engine
+    // (master 40, SFX 100).
+    const float vol = (CVarGetInteger(CVAR_SETTING("Volume.Master"), 40) / 100.0f) *
+                      (CVarGetInteger(CVAR_SETTING("Volume.SFX"), 100) / 100.0f);
+    for (auto& os : sFdActiveOneShots) {
+        if (os.pcm == nullptr) {
+            continue;
+        }
+        const size_t n = os.pcm->size() / 2;
+        for (size_t f = 0; f < frames && os.cursorFrames < n; f++, os.cursorFrames++) {
+            const int l = buf[f * 2] + (int)((*os.pcm)[os.cursorFrames * 2] * vol);
+            const int r = buf[f * 2 + 1] + (int)((*os.pcm)[os.cursorFrames * 2 + 1] * vol);
+            buf[f * 2] = (int16_t)(l < -32768 ? -32768 : (l > 32767 ? 32767 : l));
+            buf[f * 2 + 1] = (int16_t)(r < -32768 ? -32768 : (r > 32767 ? 32767 : r));
+        }
+        if (os.cursorFrames >= n) {
+            os.pcm = nullptr;
+        }
+    }
+}
+
+
 void OTRAudio_Thread() {
 #define SAMPLES_HIGH 560
 #define SAMPLES_MID 544
@@ -1162,6 +1402,10 @@ void OTRAudio_Thread() {
             AudioMgr_CreateNextAudioBuffer(audio_buffer + i * (num_audio_samples * NUM_AUDIO_CHANNELS),
                                            num_audio_samples);
         }
+
+        // FD (2026-07-12): mix any active custom-WAV one-shots on top of the synthesized N64 frame (see
+        // FdAudio_PlayOneShot). total_frames = num_audio_samples * AUDIO_FRAMES_PER_UPDATE interleaved-stereo frames.
+        FdAudio_Mix(audio_buffer, (size_t)total_frames);
 
         AudioPlayer_Play(reinterpret_cast<u8*>(audio_buffer), total_samples * sizeof(int16_t));
     };

@@ -514,7 +514,7 @@ RomFile sNaviMsgFiles[] = {
 };
 // clang-format on
 
-s16 gLinkObjectIds[] = { OBJECT_LINK_BOY, OBJECT_LINK_CHILD };
+s16 gLinkObjectIds[] = { OBJECT_LINK_BOY, OBJECT_LINK_CHILD, OBJECT_LINK_BOY }; // [2]=DEITY reuses object_link_boy (FD via fd.o2r)
 
 u32 gObjectTableSize = ARRAY_COUNT(gObjectTable);
 

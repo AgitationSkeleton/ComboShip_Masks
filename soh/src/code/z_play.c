@@ -14,6 +14,8 @@
 #include "soh/SaveManager.h"
 #include "soh/framebuffer_effects.h"
 
+#include <libultraship/libultraship.h>
+
 #include <time.h>
 #include <assert.h>
 
@@ -33,6 +35,7 @@ Input* D_8012D1F8 = NULL;
 
 PlayState* gPlayState;
 s16 firstInit = 0;
+s16 gEnPartnerId;
 
 void Play_SpawnScene(PlayState* play, s32 sceneId, s32 spawn);
 
@@ -327,10 +330,6 @@ u8 CheckDungeonCount() {
         dungeonCount++;
     }
 
-    if (Flags_GetRandomizerInf(RAND_INF_DUNGEONS_DONE_GANONS_TOWER)) {
-        dungeonCount++;
-    }
-
     return dungeonCount;
 }
 
@@ -351,6 +350,9 @@ u8 CheckBridgeRewardCount() {
     }
     return bridgeRewardCount;
 }
+
+// FD-port note: soh_fd's SoH base had CheckLACSRewardCount() here; ComboShip's rando dropped the RSK_LACS_OPTIONS
+// setting (no callers), so the dead function was removed to keep the OoT tree building.
 
 void Play_Init(GameState* thisx) {
     PlayState* play = (PlayState*)thisx;
@@ -443,6 +445,47 @@ void Play_Init(GameState* thisx) {
 
     Cutscene_HandleConditionalTriggers(play);
 
+    // FD (2026-07-12) #D: silent auto-revert when a Fierce Deity leaves its usable zone via a scene load (the
+    // fishing-hole exit door, or a boss room by any non-blue-warp exit). If the DESTINATION scene is NOT a boss
+    // lair / fishing hole (cheat off), drop to the real age HERE -- before the age-based scene-layer choice and
+    // Play_SpawnScene below -- so Link's skeleton loads directly as adult/child (no arrival flash). Restores the
+    // B item (was the FD sword) exactly like the FD apex commit does.
+    if ((gSaveContext.linkAge == LINK_AGE_DEITY) &&
+        !CVarGetInteger(CVAR_CHEAT("TransformationMasks.FdUsableAnywhere"), 0)) {
+        s32 destScene = gEntranceTable[((void)0, gSaveContext.entranceIndex)].scene;
+        s32 fdOk = (destScene == SCENE_DEKU_TREE_BOSS) || (destScene == SCENE_DODONGOS_CAVERN_BOSS) ||
+                   (destScene == SCENE_JABU_JABU_BOSS) || (destScene == SCENE_FOREST_TEMPLE_BOSS) ||
+                   (destScene == SCENE_FIRE_TEMPLE_BOSS) || (destScene == SCENE_WATER_TEMPLE_BOSS) ||
+                   (destScene == SCENE_SPIRIT_TEMPLE_BOSS) || (destScene == SCENE_SHADOW_TEMPLE_BOSS) ||
+                   (destScene == SCENE_GANONDORF_BOSS) || (destScene == SCENE_GANON_BOSS) ||
+                   (destScene == SCENE_FISHING_POND);
+        if (!fdOk) {
+            u8 realAge = gSaveContext.ship.fierceDeityPreviousForm;
+            if (realAge > LINK_AGE_CHILD) {
+                realAge = LINK_AGE_ADULT; // 0xFF safety clamp
+            }
+            gSaveContext.linkAge = realAge;
+            gSaveContext.equips.buttonItems[0] = gSaveContext.ship.fierceDeityBButtonMemory; // restore B (was FD sword)
+            gSaveContext.ship.fierceDeityPreviousForm = 0xFF;
+        }
+    }
+
+    // FD (2026-07-12) #8: debug-warp (map/scene select) sets linkAge DIRECTLY to a normal age and does NOT run the
+    // FD revert, so the linkAge==DEITY branch above is skipped and B is left holding ITEM_SWORD_DEITY forever
+    // (anywhere, not just non-boss rooms). Landing any non-deity age with the FD blade still on B is always wrong,
+    // regardless of how we got here -- restore it. Prefer the stashed pre-transform B item; if that's missing or is
+    // itself the FD sword, fall back to the age's own sword (Kokiri for child, Master for adult) so B can never be
+    // stuck on the deity blade out of deity form. (The per-frame FD-sword-on-B force in Player_UpdateCommon is
+    // LINK_IS_DEITY-gated, so it won't re-apply here once the age is normal.)
+    if ((gSaveContext.linkAge != LINK_AGE_DEITY) && (gSaveContext.equips.buttonItems[0] == ITEM_SWORD_DEITY)) {
+        u8 restore = gSaveContext.ship.fierceDeityBButtonMemory;
+        if ((restore == ITEM_SWORD_DEITY) || (restore == ITEM_NONE) || (restore == ITEM_NONE_FE)) {
+            restore = (gSaveContext.linkAge == LINK_AGE_CHILD) ? ITEM_SWORD_KOKIRI : ITEM_SWORD_MASTER;
+        }
+        gSaveContext.equips.buttonItems[0] = restore;
+        gSaveContext.ship.fierceDeityPreviousForm = 0xFF;
+    }
+
     if (gSaveContext.gameMode != GAMEMODE_NORMAL || gSaveContext.cutsceneIndex >= 0xFFF0) {
         gSaveContext.nayrusLoveTimer = 0;
         Magic_Reset(play);
@@ -473,9 +516,9 @@ void Play_Init(GameState* thisx) {
         gSaveContext.sceneLayer = (Flags_GetEventChkInf(EVENTCHKINF_USED_FOREST_TEMPLE_BLUE_WARP)) ? 3 : 2;
     }
 
-    Play_SpawnScene(play,
-                    gEntranceTable[((void)0, gSaveContext.entranceIndex) + ((void)0, gSaveContext.sceneLayer)].scene,
-                    gEntranceTable[((void)0, gSaveContext.sceneLayer) + ((void)0, gSaveContext.entranceIndex)].spawn);
+    Play_SpawnScene(
+        play, gEntranceTable[((void)0, gSaveContext.entranceIndex) + ((void)0, gSaveContext.sceneLayer)].scene,
+        gEntranceTable[((void)0, gSaveContext.sceneLayer) + ((void)0, gSaveContext.entranceIndex)].spawn);
 
     osSyncPrintf("\nSCENE_NO=%d COUNTER=%d\n", ((void)0, gSaveContext.entranceIndex), gSaveContext.sceneLayer);
 
@@ -524,6 +567,9 @@ void Play_Init(GameState* thisx) {
     play->state.main = Play_Main;
     play->state.destroy = Play_Destroy;
     play->transitionTrigger = TRANS_TRIGGER_END;
+    play->ageChangeFlag = -1; // FD (2026-07-11): idle (no transform fade); RE z_scene.c:298
+    play->ageChangeTimer = 0;
+    play->ageChangeFadeAlpha = 0;
     play->unk_11E16 = 0xFF;
     play->bgCoverAlpha = 0;
     play->haltAllActors = false;
@@ -578,6 +624,10 @@ void Play_Init(GameState* thisx) {
     // Handle Rocs Feather requirement
     gItemAgeReqs[ITEM_ROCS_FEATHER] = AGE_REQ_NONE;
     gSlotAgeReqs[SLOT_NAYRUS_LOVE] = AGE_REQ_NONE;
+
+    // FD (2026-07-11): the Fierce Deity's Mask is usable by both ages, so keep its kaleido icon from being
+    // age-greyed when it is cycled onto the first bottle slot.
+    gItemAgeReqs[ITEM_MASK_DEITY] = AGE_REQ_NONE;
 
     Actor_InitContext(play, &play->actorCtx, play->linkActorEntry);
 
@@ -1418,6 +1468,32 @@ void Play_Draw(PlayState* play) {
             gSPDisplayList(OVERLAY_DISP++, gfxP);
             gSPGrayscale(gfxP++, false);
 
+            // FD (2026-07-11): Fierce Deity transform white-fade driver (RE z_play.c:1196-1225). Self-contained:
+            // ramps ageChangeFadeAlpha up while a transform is pending (ageChangeFlag >= 0) and back down while
+            // idle (< 0), then fills the screen white at the current alpha. Player_Draw commits the age swap at
+            // the fully-white apex. (RE plays NA_SE_EV_FORM_CHANGE on fade start; that sfx is absent in SoH --
+            // the transform trigger already plays NA_SE_PL_CHANGE_ARMS, so it is omitted here. TODO FD sfx.)
+            if (play->ageChangeFlag >= 0) {
+                play->ageChangeFadeAlpha += TRANSFORM_FADE_SPEED;
+            } else if (play->ageChangeFadeAlpha != 0) {
+                play->ageChangeFadeAlpha -= TRANSFORM_FADE_SPEED;
+            }
+            play->ageChangeFadeAlpha = CLAMP(play->ageChangeFadeAlpha, 0, 255 + TRANSFORM_EXTRA_FADE_FRAMES);
+            if (play->ageChangeFadeAlpha != 0) {
+                gDPPipeSync(gfxP++);
+                gSPClearGeometryMode(gfxP++, G_ZBUFFER | G_SHADE | G_CULL_BOTH | G_FOG | G_LIGHTING |
+                                                 G_TEXTURE_GEN | G_TEXTURE_GEN_LINEAR | G_LOD | G_SHADING_SMOOTH);
+                gDPSetOtherMode(gfxP++,
+                                G_AD_DISABLE | G_CD_MAGICSQ | G_CK_NONE | G_TC_FILT | G_TF_BILERP | G_TT_NONE |
+                                    G_TL_TILE | G_TD_CLAMP | G_TP_NONE | G_CYC_1CYCLE | G_PM_1PRIMITIVE,
+                                G_AC_NONE | G_ZS_PIXEL | G_RM_CLD_SURF | G_RM_CLD_SURF2);
+                gDPSetCombineLERP(gfxP++, 0, 0, 0, PRIMITIVE, 0, 0, 0, PRIMITIVE, 0, 0, 0, PRIMITIVE, 0, 0, 0,
+                                  PRIMITIVE);
+                gDPSetPrimColor(gfxP++, 0, 0, 255, 255, 255, CLAMP(play->ageChangeFadeAlpha, 0, 255));
+                gDPFillRectangle(gfxP++, 0, 0, gScreenWidth - 1, gScreenHeight - 1);
+                gDPPipeSync(gfxP++);
+            }
+
             if ((play->transitionMode == TRANS_MODE_INSTANCE_RUNNING) ||
                 (play->transitionMode == TRANS_MODE_INSTANCE_WAIT) ||
                 (play->transitionCtx.transitionType >= TRANS_TYPE_MAX)) {
@@ -2208,7 +2284,7 @@ void Play_PerformSave(PlayState* play) {
             (gSaveContext.equips.buttonItems[0] == ITEM_NONE && !Flags_GetInfTable(INFTABLE_SWORDLESS))) {
 
             gSaveContext.equips.buttonItems[0] = gSaveContext.buttonStatus[0];
-            GameInteractor_Should(VB_TEMP_B_RESTORE_SWORDLESS, true);
+            Interface_RandoRestoreSwordless();
         }
 
         Save_SaveFile();
