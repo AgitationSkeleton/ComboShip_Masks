@@ -1343,6 +1343,7 @@ void func_80A05208(Actor* thisx, PlayState* play) {
 // ask to talk to saria
 void func_80A052F4(Actor* thisx, PlayState* play) {
     EnElf* this = (EnElf*)thisx;
+    u16 textId = play->msgCtx.textId; // FD (aegiker RE->SoH port) #7: capture before the choice dispatch
 
     func_80A04DE4(this, play);
 
@@ -1350,15 +1351,32 @@ void func_80A052F4(Actor* thisx, PlayState* play) {
         if (Message_ShouldAdvance(play)) {
             play->msgCtx.unk_E3F2 = 0xFF;
 
-            switch (play->msgCtx.choiceIndex) {
-                case 0: // yes
-                    this->actor.update = func_80A05188;
-                    Message_ContinueTextbox(play, 0xE2);
-                    break;
-                case 1: // no
-                    this->actor.update = func_80A05208;
-                    Message_ContinueTextbox(play, 0xE1);
-                    break;
+            // FD (aegiker RE->SoH port) #7: the transformation-mask water-safeguard two-choice (0x71B5). "Yes"
+            // (choiceIndex 0) reverts the form back to the stashed human age. ageChangeFlag set to a non-deity
+            // age drives the existing FD white-fade revert; fierceDeityPreviousForm==0xFF means "not transformed"
+            // (nothing to revert). Then just close the textbox and let Navi return.
+            if (textId == 0x71B5) {
+                if ((play->msgCtx.choiceIndex == 0) && (gSaveContext.ship.fierceDeityPreviousForm != 0xFF)) {
+                    play->ageChangeFlag = gSaveContext.ship.fierceDeityPreviousForm;
+                    // FD: "shing" flash sfx as the white-fade revert starts, matching the manual transform/revert
+                    // cutscene and the boss blue-warp auto-revert -- all use NA_SE_EV_TRIFORCE_FLASH.
+                    Sfx_PlaySfxCentered(NA_SE_EV_TRIFORCE_FLASH);
+                }
+                Message_CloseTextbox(play);
+                this->actor.update = func_80A053F0;
+                func_80A01C38(this, 0);
+                this->fairyFlags &= ~0x20;
+            } else {
+                switch (play->msgCtx.choiceIndex) {
+                    case 0: // yes
+                        this->actor.update = func_80A05188;
+                        Message_ContinueTextbox(play, 0xE2);
+                        break;
+                    case 1: // no
+                        this->actor.update = func_80A05208;
+                        Message_ContinueTextbox(play, 0xE1);
+                        break;
+                }
             }
         }
     } else if (Actor_TextboxIsClosing(thisx, play)) {

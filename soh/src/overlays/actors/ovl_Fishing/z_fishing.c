@@ -371,6 +371,7 @@ static s16 sRumbleDelay;
 static s16 sFishingMusicDelay;
 static Fishing* sFishingHookedFish;
 static s16 sFishingPlayingState;
+static u8 sFdScaryFaceNagged; // FD (aegiker RE->SoH port): latches the "scary face" owner nag so it fires once per approach
 static s16 sLureTimer; // AND'd for various effects/checks
 static s16 D_80B7E0B0;
 static s16 D_80B7E0B2;
@@ -899,6 +900,7 @@ void Fishing_Init(Actor* thisx, PlayState* play2) {
         play->specialEffects = sFishingEffects;
         gTimeSpeed = 1;
         sFishingPlayingState = 0;
+        sFdScaryFaceNagged = 0; // FD (aegiker RE->SoH port): re-arm the scary-face nag on (re)entry
         sFishingMusicDelay = 10;
 
         Audio_QueueSeqCmd(0x1 << 28 | SEQ_PLAYER_BGM_MAIN << 24 | 0x0100FF);
@@ -2081,7 +2083,11 @@ void Fishing_DrawRod(PlayState* play) {
 
     Matrix_Mult(&player->mf_9E0, MTXMODE_NEW);
 
-    if (sLinkAge != LINK_AGE_CHILD) {
+    if (sLinkAge == LINK_AGE_DEITY) {
+        // FD (aegiker RE->SoH port): Fierce Deity's larger frame + hand matrix leave the rod grip sitting a bit
+        // behind where his sword sits. Pull it forward/down toward the hand along the same axis as adult/child.
+        Matrix_Translate(0.0f, 340.0f, 0.0f, MTXMODE_APPLY);
+    } else if (sLinkAge != LINK_AGE_CHILD) {
         Matrix_Translate(0.0f, 400.0f, 0.0f, MTXMODE_APPLY);
     } else {
         Matrix_Translate(0.0f, 230.0f, 0.0f, MTXMODE_APPLY);
@@ -3925,7 +3931,12 @@ void Fishing_UpdateFish(Actor* thisx, PlayState* play2) {
             Math_ApproachF(&sCatchCamX, 15.0f, 0.05f, 0.75f);
 
             multiVecSrc.x = sCatchCamX;
-            if (sLinkAge != LINK_AGE_CHILD) {
+            // FD (aegiker RE->SoH port): Fierce Deity is ~1.5x adult height, so the adult hoist-camera framed him
+            // too tightly. Pull the eye up and BACK (bigger y/z) so the whole FD + held fish fit the frame.
+            if (gSaveContext.linkAge == LINK_AGE_DEITY) {
+                multiVecSrc.y = 48.0f;
+                multiVecSrc.z = 85.0f;
+            } else if (sLinkAge != LINK_AGE_CHILD) {
                 multiVecSrc.y = 30.0f;
                 multiVecSrc.z = 55.0f;
             } else {
@@ -3940,7 +3951,9 @@ void Fishing_UpdateFish(Actor* thisx, PlayState* play2) {
             sCameraEye.z += player->actor.world.pos.z;
 
             sCameraAt = player->actor.world.pos;
-            if (sLinkAge != LINK_AGE_CHILD) {
+            if (gSaveContext.linkAge == LINK_AGE_DEITY) {
+                sCameraAt.y += 62.0f; // FD (aegiker RE->SoH port): raise the look-at proportionally to FD's height
+            } else if (sLinkAge != LINK_AGE_CHILD) {
                 sCameraAt.y += 40.0f;
             } else {
                 sCameraAt.y += 25.0f;
@@ -5364,6 +5377,24 @@ void Fishing_UpdateOwner(Actor* thisx, PlayState* play2) {
         }
     }
 
+    // FD (aegiker RE->SoH port): MM3D fishing-hole parity. If a Fierce Deity who can't stay transformed here
+    // (TransformationMasks.FdUsableAnywhere OFF) walks up to the exit WITHOUT the rod, the owner nags once about
+    // scaring off customers -- then lets them leave (they auto-revert at the door transition). Reuses the exact
+    // same doorway threshold as the "can't leave with the rod" block above, but for the not-holding-rod case.
+    if ((gSaveContext.linkAge == LINK_AGE_DEITY) && (sFishingPlayingState == 0) &&
+        (sFishingPlayerCinematicState == 0) && (player->actor.world.pos.z > 1360.0f) &&
+        (fabsf(player->actor.world.pos.x) < 25.0f) &&
+        !CVarGetInteger(CVAR_CHEAT("TransformationMasks.FdUsableAnywhere"), 0)) {
+        if (!sFdScaryFaceNagged && (sFishingCinematicTimer == 0)) {
+            player->actor.world.pos.z = 1360.0f;
+            player->actor.speedXZ = 0.0f;
+            sFishingPlayerCinematicState = 30;
+            sFdScaryFaceNagged = 1;
+        }
+    } else if (player->actor.world.pos.z < 1300.0f) {
+        sFdScaryFaceNagged = 0; // re-arm once the player steps back from the door
+    }
+
     if ((sSinkingLureLocation != 0) &&
         (fabsf(player->actor.world.pos.x - sSinkingLureLocationPos[sSinkingLureLocation - 1].x) < 25.0f) &&
         (fabsf(player->actor.world.pos.y - sSinkingLureLocationPos[sSinkingLureLocation - 1].y) < 10.0f) &&
@@ -5567,6 +5598,49 @@ void Fishing_UpdateOwner(Actor* thisx, PlayState* play2) {
                 sFishingCinematicTimer = 30;
                 Environment_EnableUnderwaterLights(play, 0);
                 play->envCtx.adjFogNear = 0;
+            }
+            break;
+
+        case 30: { // FD (aegiker RE->SoH port): owner nags a Fierce Deity about the scary face (MM3D fishing-hole
+                   // parity). Mirrors the "return the rod" cutscene (case 10) -- freeze camera + halt the player +
+                   // show the nag -- but on close it just releases the player (case 31); it forces nothing back, so
+                   // the player is free to walk out and revert at the door.
+            Camera* mainCam;
+
+            func_80064520(play, &play->csCtx);
+            sSubCamId = Play_CreateSubCamera(play);
+            Play_ChangeCameraStatus(play, CAM_ID_MAIN, CAM_STAT_WAIT);
+            Play_ChangeCameraStatus(play, sSubCamId, CAM_STAT_ACTIVE);
+            Player_SetCsActionWithHaltedActors(play, &this->actor, 5);
+            mainCam = Play_GetCamera(play, CAM_ID_MAIN);
+            sCameraEye.x = mainCam->eye.x;
+            sCameraEye.y = mainCam->eye.y;
+            sCameraEye.z = mainCam->eye.z;
+            sCameraAt.x = mainCam->at.x;
+            sCameraAt.y = mainCam->at.y;
+            sCameraAt.z = mainCam->at.z;
+            Message_StartTextbox(play, 0x71B6, NULL); // TEXT_TRANSFORM_FISHING_SCARY
+            sFishingPlayerCinematicState = 31;
+            func_800A9F6C(0.0f, 150, 10, 10);
+            // fallthrough
+        }
+
+        case 31:
+            player->actor.world.pos.z = 1360.0f;
+            player->actor.speedXZ = 0.0f;
+
+            if (Message_GetState(&play->msgCtx) == TEXT_STATE_NONE) {
+                Camera* mainCam = Play_GetCamera(play, CAM_ID_MAIN);
+
+                mainCam->eye = sCameraEye;
+                mainCam->eyeNext = sCameraEye;
+                mainCam->at = sCameraAt;
+                func_800C08AC(play, sSubCamId, 0);
+                func_80064534(play, &play->csCtx);
+                Player_SetCsActionWithHaltedActors(play, &this->actor, 7);
+                sFishingPlayerCinematicState = 0;
+                sSubCamId = 0;
+                sFishingCinematicTimer = 30;
             }
             break;
 

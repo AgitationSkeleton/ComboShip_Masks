@@ -104,7 +104,23 @@ void Anchor::RegisterHooks() {
     COND_HOOK(OnPlayerUpdate, isConnected, [&]() {
         if (justLoadedSave) {
             justLoadedSave = false;
+            // FD (aegiker RE->SoH port): seed the mask edge-detector from the freshly-loaded save so loading a save
+            // that ALREADY owns the mask doesn't spuriously re-broadcast a grant -- late-join reconciliation is
+            // handled by the RequestTeamState below + the ship.hasFierceDeityMask field in UPDATE_TEAM_STATE.
+            prevHadFierceDeityMask = IsSaveLoaded() && gSaveContext.ship.hasFierceDeityMask;
             SendPacket_RequestTeamState();
+        }
+
+        // FD (aegiker RE->SoH port): the Fierce Deity mask is a custom save bool with no item-table / rando entry, so
+        // the generic GiveItem relay (driven off OnItemReceive) can't carry it -- the item resolves to a bogus entry.
+        // Detect the local 0->1 obtain edge here and relay it explicitly; the receiver grants it directly. Gated on
+        // syncItemsAndFlags like every other item; when item-sync is off the mask stays per-player.
+        if (roomState.syncItemsAndFlags && IsSaveLoaded()) {
+            bool hasFdMask = gSaveContext.ship.hasFierceDeityMask != 0;
+            if (hasFdMask && !prevHadFierceDeityMask) {
+                SendPacket_GiveItem(MOD_NONE, ITEM_MASK_DEITY);
+            }
+            prevHadFierceDeityMask = hasFdMask;
         }
 
         if (shouldRefreshActors) {

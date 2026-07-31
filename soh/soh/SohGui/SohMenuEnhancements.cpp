@@ -2153,6 +2153,11 @@ void SohMenu::AddMenuEnhancements() {
             "current form."));
 
     AddWidget(path, "Fierce Deity", WIDGET_SEPARATOR_TEXT);
+    AddWidget(path, "Shared Fierce Deity's Mask (cross-game)", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("TransformationMasks.SharedFdMask"))
+        .Options(CheckboxOptions().DefaultValue(true).Tooltip(
+            "Shares the Fierce Deity's Mask across both games: obtaining it in Majora's Mask also unlocks the "
+            "Fierce Deity form here in Ocarina of Time (and vice-versa). Turn off to keep the mask per-game."));
     AddWidget(path, "FD Usable Anywhere", WIDGET_CVAR_CHECKBOX)
         .CVar(CVAR_CHEAT("TransformationMasks.FdUsableAnywhere"))
         .Options(CheckboxOptions().DefaultValue(false).Tooltip(

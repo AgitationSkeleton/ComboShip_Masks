@@ -202,6 +202,17 @@ void EnSyatekiMan_SetupIdle(EnSyatekiMan* this, PlayState* play) {
 
 void EnSyatekiMan_Idle(EnSyatekiMan* this, PlayState* play) {
     SkelAnime_Update(&this->skelAnime);
+    // FD (aegiker RE->SoH port): Fierce Deity can't play the shooting gallery (the first-person aiming path never
+    // gets a bow -- FD's B is his sword -- so the camera hangs). Offer Navi's "current form!" nag instead of the
+    // 20-rupee choice, re-evaluated every frame so transforming at the counter updates the offer. Talk() closes it
+    // without deducting rupees or starting the game.
+    if (LINK_IS_DEITY) {
+        this->actor.textId = TEXT_TRANSFORM_CANT_DO_THAT;
+        this->numTextBox = TEXT_STATE_EVENT;
+    } else {
+        this->actor.textId = sTextIds[this->textIdx];
+        this->numTextBox = sTextBoxCount[this->textIdx];
+    }
     if (Actor_ProcessTalkRequest(&this->actor, play)) {
         this->actionFunc = EnSyatekiMan_Talk;
     } else {
@@ -217,6 +228,14 @@ void EnSyatekiMan_Talk(EnSyatekiMan* this, PlayState* play) {
         play->shootingGalleryStatus = -2;
     }
     if ((this->numTextBox == Message_GetState(&play->msgCtx)) && Message_ShouldAdvance(play)) {
+        // FD (aegiker RE->SoH port): if the deity block nag was the message shown, just close it and return to Idle
+        // -- no choice processing, no rupees, no game. Repeatable: Idle re-offers the nag (or the real choice once
+        // human again).
+        if (LINK_IS_DEITY) {
+            Message_CloseTextbox(play);
+            this->actionFunc = EnSyatekiMan_SetupIdle;
+            return;
+        }
         if (this->textIdx == SYATEKI_TEXT_CHOICE) {
             switch (play->msgCtx.choiceIndex) {
                 case 0:

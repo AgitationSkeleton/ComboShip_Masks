@@ -490,12 +490,28 @@ s32 DoorWarp1_PlayerInRange(DoorWarp1* this, PlayState* play) {
     return ret;
 }
 
+// FD (aegiker RE->SoH port): a boss-clear blue warp only ever exists in a boss lair, so a Fierce Deity stepping into
+// it must revert to his real form (skeleton swap + B restore) with the "shing" flash, then the warp proceeds with
+// Link back to his real age. Fires once (ageChangeFlag<0 guard). The FdUsableAnywhere cheat leaves FD as-is.
+static void DoorWarp1_RevertFierceDeity(PlayState* play) {
+    if ((gSaveContext.linkAge == LINK_AGE_DEITY) && (play->ageChangeFlag < 0) &&
+        !CVarGetInteger(CVAR_CHEAT("TransformationMasks.FdUsableAnywhere"), 0)) {
+        u8 realAge = gSaveContext.ship.fierceDeityPreviousForm;
+        if (realAge > LINK_AGE_CHILD) {
+            realAge = LINK_AGE_ADULT;
+        }
+        play->ageChangeFlag = realAge;                // start the white-fade revert (no cutscene)
+        Sfx_PlaySfxCentered(NA_SE_EV_TRIFORCE_FLASH); // the "shing" flash on contact
+    }
+}
+
 void DoorWarp1_ChildWarpIdle(DoorWarp1* this, PlayState* play) {
     Player* player;
 
     Audio_PlayActorSound2(&this->actor, NA_SE_EV_WARP_HOLE - SFX_FLAG);
 
     if (DoorWarp1_PlayerInRange(this, play)) {
+        DoorWarp1_RevertFierceDeity(play); // FD (aegiker RE->SoH port): revert on blue-warp contact
         player = GET_PLAYER(play);
 
         Audio_PlaySoundGeneral(NA_SE_EV_LINK_WARP, &player->actor.projectedPos, 4, &gSfxDefaultFreqAndVolScale,
@@ -586,6 +602,7 @@ void DoorWarp1_RutoWarpIdle(DoorWarp1* this, PlayState* play) {
     Audio_PlayActorSound2(&this->actor, NA_SE_EV_WARP_HOLE - SFX_FLAG);
 
     if (this->rutoWarpState != WARP_BLUE_RUTO_STATE_INITIAL && DoorWarp1_PlayerInRange(this, play)) {
+        DoorWarp1_RevertFierceDeity(play); // FD (aegiker RE->SoH port): revert on Ruto blue-warp contact
         this->rutoWarpState = WARP_BLUE_RUTO_STATE_ENTERED;
         Player_SetCsActionWithHaltedActors(play, &this->actor, 10);
         this->unk_1B2 = 1;
@@ -697,6 +714,7 @@ void DoorWarp1_AdultWarpIdle(DoorWarp1* this, PlayState* play) {
     Audio_PlayActorSound2(&this->actor, NA_SE_EV_WARP_HOLE - SFX_FLAG);
 
     if (GameInteractor_Should(VB_BLUE_WARP_CONSIDER_ADULT_IN_RANGE, DoorWarp1_PlayerInRange(this, play), this)) {
+        DoorWarp1_RevertFierceDeity(play); // FD (aegiker RE->SoH port): revert on adult blue-warp contact
         player = GET_PLAYER(play);
 
         OnePointCutscene_Init(play, 0x25E8, 999, &this->actor, CAM_ID_MAIN);

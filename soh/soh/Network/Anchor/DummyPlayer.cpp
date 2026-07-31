@@ -9,6 +9,8 @@ extern PlayState* gPlayState;
 
 void Player_UseItem(PlayState* play, Player* player, s32 item);
 void Player_Draw(Actor* actor, PlayState* play);
+s32 Object_Spawn(ObjectContext* objectCtx, s16 objectId); // FD (aegiker RE->SoH port): not in functions.h; FD object residency
+void FierceDeity_DrawGiMask(PlayState* play, GetItemEntry* getItemEntry); // FD (aegiker RE->SoH port): custom FD-mask get-item draw
 }
 
 static DamageTable DummyPlayerDamageTable = {
@@ -124,10 +126,37 @@ void DummyPlayer_Update(Actor* actor, PlayState* play) {
         actor->world.pos.y = -9999.0f;
         actor->world.pos.z = -9999.0f;
         actor->shape.shadowAlpha = 0;
+        // FD (aegiker RE->SoH port): keep the transform-anim edge-detector current even while this remote is out of
+        // our scene, so walking into our scene already mid-transform doesn't replay the transform-start sfx.
+        client.fdTransformAnimPrev = client.fdTransformAnim;
+        client.fdTransformCurFramePrev = client.fdTransformCurFrame;
         return;
     }
 
     actor->shape.shadowAlpha = 255;
+
+    // FD (aegiker RE->SoH port): a remote playing as Fierce Deity must draw at FD's 0.015 scale, exactly like the
+    // local player's per-frame size block. The dummy never runs Player_UpdateCommon, so without this an FD remote
+    // keeps the 0.01 adult/child init scale and the FD model renders at Young-Link height. Only override for DEITY.
+    if (client.linkAge == LINK_AGE_DEITY) {
+        actor->scale.x = actor->scale.y = actor->scale.z = 0.015f;
+    }
+
+    // FD (aegiker RE->SoH port): a DEITY remote's body limb DLs live inside OBJECT_LINK_BOY, but this dummy inherited
+    // the shared ACTOR_PLAYER object slot -- OBJECT_LINK_CHILD when the LOCAL player is a child -- yielding "FD
+    // skeleton + young-Link skin". Make OBJECT_LINK_BOY resident (spawn as soon as the transform anim starts so the
+    // DMA finishes by the apex) and, once loaded, point this dummy's object slot at it so Actor_SetObjectDependency
+    // binds segment 6 to the boy object. If not yet loaded we leave the slot as-is (brief child-skinned frame).
+    if (client.linkAge == LINK_AGE_DEITY || client.fdTransformAnim != 0) {
+        s32 boyIdx = Object_GetIndex(&play->objectCtx, OBJECT_LINK_BOY);
+        if (boyIdx < 0) {
+            boyIdx = Object_Spawn(&play->objectCtx, OBJECT_LINK_BOY);
+        }
+        if (client.linkAge == LINK_AGE_DEITY && boyIdx >= 0 && Object_IsLoaded(&play->objectCtx, boyIdx)) {
+            actor->objBankIndex = boyIdx;
+        }
+    }
+
     Math_Vec3s_Copy(&player->upperLimbRot, &client.upperLimbRot);
     Math_Vec3s_Copy(&actor->shape.rot, &client.posRot.rot);
     Math_Vec3f_Copy(&actor->world.pos, &client.posRot.pos);
@@ -147,6 +176,58 @@ void DummyPlayer_Update(Actor* actor, PlayState* play) {
         (client.unk_862 > (s16)GID_MAXIMUM) ? (s16)GID_STONE_OF_AGONY : client.unk_862; // prevent OOB, show SoA if OOB
     player->unk_85C = client.unk_85C;
     player->av1.actionVar1 = client.actionVar1;
+
+    // FD (aegiker RE->SoH port): apply the networked Fierce Deity transform-cutscene state so this remote player
+    // visibly dons the mask (held -> on-face -> scream) and morphs. Player_PostLimbDrawGameplay reads these when
+    // drawing. GATED on the remote actually being mid-transform (anim id non-zero): otherwise it would overwrite
+    // every non-FD (adult/child) remote's stateFlags3 + curFrame that vanilla Anchor never touched. Now we only
+    // OR-in the on-face mask bit + cutscene params during the transform, and clear that one bit otherwise.
+    if (client.fdTransformAnim != 0) {
+        player->stateFlags3 |= (client.fdStateFlags3 & PLAYER_STATE3_TRANSFORMATION_MASK);
+        player->transformTargetForm = client.fdTransformTargetForm;
+        player->transformPreviousForm = client.fdTransformPrevForm;
+        player->transformMatrixModifiers[2] = client.fdTransformMod2;
+        player->transformMatrixModifiers[3] = client.fdTransformMod3;
+        player->transformEventTimer2 = client.fdTransformTimer2;
+        Player_SetFdTransformAnimById(player, client.fdTransformAnim, client.fdTransformCurFrame);
+
+        // AUDIO (FD): reproduce the transforming player's mask-cutscene sfx POSITIONALLY at the remote, sequenced by
+        // the synced anim frame -- so nearby players hear the beats in the right order/timing/place instead of one
+        // scream at cutscene start. The local client's faithful custom-WAV cues are 2D-only, so remotes get the RE's
+        // positional N64 substitutes at the SAME frames the local timeline uses. A beat fires once when the synced
+        // curFrame CROSSES its threshold; on a fresh anim (id changed) prev resets to -1 so an early beat still lands.
+        {
+            f32 fPrev = (client.fdTransformAnimPrev == client.fdTransformAnim) ? client.fdTransformCurFramePrev
+                                                                              : -1.0f;
+            f32 fCur = client.fdTransformCurFrame;
+#define FD_XFORM_BEAT(T) ((fPrev < (T)) && (fCur >= (T)))
+            if (client.fdTransformAnim == 1) { // cl_setmask (put-on the FD mask)
+                if (FD_XFORM_BEAT(4.0f)) {
+                    Audio_PlayActorSound2(&player->actor, NA_SE_PL_CHANGE_ARMS);
+                }
+                if (FD_XFORM_BEAT(20.0f)) {
+                    Audio_PlayActorSound2(&player->actor, NA_SE_PL_FREEZE_S);
+                }
+                if (FD_XFORM_BEAT(30.0f)) {
+                    Audio_PlayActorSound2(&player->actor, (client.fdTransformPrevForm == LINK_AGE_CHILD)
+                                                              ? NA_SE_VO_LI_MAGIC_ATTACK_KID
+                                                              : NA_SE_VO_LI_MAGIC_ATTACK);
+                }
+            } else if (client.fdTransformAnim == 3 || client.fdTransformAnim == 4) { // revert (take mask off)
+                if (FD_XFORM_BEAT(12.0f)) {
+                    Audio_PlayActorSound2(&player->actor, NA_SE_PL_PUT_OUT_ITEM);
+                }
+                if (FD_XFORM_BEAT(15.0f)) {
+                    Audio_PlayActorSound2(&player->actor, NA_SE_PL_CHANGE_ARMS);
+                }
+            }
+#undef FD_XFORM_BEAT
+        }
+    } else {
+        player->stateFlags3 &= ~PLAYER_STATE3_TRANSFORMATION_MASK;
+    }
+    client.fdTransformAnimPrev = client.fdTransformAnim;
+    client.fdTransformCurFramePrev = client.fdTransformCurFrame;
 
     // Apply animation movement (Copied from Player_ApplyAnimMovementScaledByAge)
     Vec3f diff;
@@ -248,6 +329,13 @@ void DummyPlayer_Draw(Actor* actor, PlayState* play) {
     gSaveContext.linkAge = client.linkAge;
     u8 originalButtonItem0 = gSaveContext.equips.buttonItems[0];
     gSaveContext.equips.buttonItems[0] = client.buttonItem0;
+
+    // FD (aegiker RE->SoH port): when this remote is holding up the FD-mask get-item, its gid (Goron-mask flow-gate
+    // id) would make Player_DrawGetItem draw the raw GORON mask -- the real FD-mask model comes from a local-only
+    // custom draw func on the get-item entry, which the dummy never has. Point the dummy's get-item draw func at it
+    // so the held model is the Fierce Deity mask (fixed resource-path DLs -- no giObjectSegment dependency). Cleared
+    // to NULL otherwise so any OTHER get-item the dummy replicates still draws normally by its gid.
+    player->getItemEntry.drawFunc = client.fdMaskGi ? FierceDeity_DrawGiMask : NULL;
 
     Player_Draw((Actor*)player, play);
     gSaveContext.linkAge = originalAge;

@@ -3326,6 +3326,12 @@ extern "C" __declspec(dllexport) void SOH_GrantCrossItem(const char* itemName) {
 // hasFierceDeityMask (not a real inventory item), so we just set that flag save-direct and persist it. This works
 // while OOT is the DORMANT game (the launcher calls it from the cross-item delivery seam). Idempotent.
 extern "C" __declspec(dllexport) void SOH_GrantFierceDeityMask(void) {
+    // ComboShip SHARED Fierce Deity's Mask (on by default): when off, obtaining the FD mask in the other game does
+    // NOT unlock this game's Fierce Deity form -- the mask stays per-game. The mask's normal home-game grant is
+    // unaffected; this only gates the cross-game share.
+    if (!CVarGetInteger(CVAR_ENHANCEMENT("TransformationMasks.SharedFdMask"), 1)) {
+        return;
+    }
     if (gSaveContext.ship.hasFierceDeityMask) {
         return; // already owned
     }
