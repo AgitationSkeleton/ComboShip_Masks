@@ -12,6 +12,10 @@ Like [OOTMM](https://ootmm.com/), ComboShip shuffles items across *both* games a
 
 - Anything within Ship and 2Ship is here. When those projects gets new updates, they are not far from inclusion here.
 - Online Multiplayer through Anchor. And yes it works cross-game as well. Work together in OOT and MM, split or together.
+- **Transformation Masks in Ocarina of Time.** This fork ports [aegiker's Fierce Deity work](https://github.com/AgitationSkeleton/soh_fd) into ComboShip's OoT side, so Link can wear the **Fierce Deity's Mask** and fight as the Fierce Deity in Ocarina of Time — the same shared mask the randomizer already places in Majora's Mask. Obtaining it in either game grants it in both.
+  - **Enhancements → Transformation Masks** menu: *Give Fierce Deity's Mask* button, form rules (stuck-safeguards, restricted-action prompts), Fierce-Deity toggles (usable anywhere, play ocarina, sheathe sword, magic spin, increased strength, unrestrict items), and a **Fierce Deity Tunic Color** cosmetic (also in Cosmetics Editor → Link).
+  - **Enhancements → Bonus Settings**: Majora's-Mask-flavored extras — MM jump flips, MM ledge momentum, MM roll-attack damage, Young Link hookshot sound, and a **Bunny Hood Fit** correction so the hood sits right on the taller Adult / Fierce Deity heads.
+  - The Fierce Deity model and audio ship inside `fd.o2r`, generated once at first launch from your Majora's Mask ROM (the same ROM ComboShip already asks for) — no extra prompt.
 
 ## Future plans
 

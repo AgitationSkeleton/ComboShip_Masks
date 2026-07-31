@@ -193,6 +193,7 @@ std::map<std::string, CosmeticOption> cosmeticOptions = {
     COSMETIC_OPTION("Link.KokiriTunic",             "Kokiri Tunic",             COSMETICS_GROUP_LINK,         ColorRGBA8( 30, 105,  27, 255), false, true, false),
     COSMETIC_OPTION("Link.GoronTunic",              "Goron Tunic",              COSMETICS_GROUP_LINK,         ColorRGBA8(100,  20,   0, 255), false, true, false),
     COSMETIC_OPTION("Link.ZoraTunic",               "Zora Tunic",               COSMETICS_GROUP_LINK,         ColorRGBA8(  0,  60, 100, 255), false, true, false),
+    COSMETIC_OPTION("Link.FierceDeityTunic",        "Fierce Deity Tunic",       COSMETICS_GROUP_LINK,         ColorRGBA8(255, 255, 255, 255), false, true, false), // FD (aegiker RE->SoH port): tint for FD's cloth; read by FierceDeityTunicColor.cpp
     COSMETIC_OPTION("Link.Hair",                    "Hair",                     COSMETICS_GROUP_LINK,         ColorRGBA8(255, 173,  27, 255), false, true, true),
     COSMETIC_OPTION("Link.Linen",                   "Linen",                    COSMETICS_GROUP_LINK,         ColorRGBA8(255, 255, 255, 255), false, true, true),
     COSMETIC_OPTION("Link.Boots",                   "Boots",                    COSMETICS_GROUP_LINK,         ColorRGBA8( 93,  44,  18, 255), false, true, true),

@@ -150,6 +150,26 @@ static const std::map<int32_t, const char*> mirroredWorldModes = {
     { MIRRORED_WORLD_DUNGEONS_RANDOM_SEEDED, "Dungeons Random (Seeded)" },
 };
 
+// FD (aegiker RE->SoH port): "Unrestrict Items for FD" cheat dropdown. Keep in sync with Parameter_CanUseItem
+// (z_parameter.c). 0 Off / 1 Nuts+Bombs+Spells / 2 All except swords+shields.
+static const std::map<int32_t, const char*> fdUnrestrictItemsValues = {
+    { 0, "Off" },
+    { 1, "Deku Nuts, Bombs & Spells" },
+    { 2, "All (Except Swords + Shields)" },
+};
+// FD Bonus Settings form gates. Keep in sync with the MmFlips/MmBonus/MaskFit gates in z_player.c / z_player_lib.c.
+static const std::map<int32_t, const char*> mmFlipsFormValues = {
+    { 0, "Off" }, { 1, "Child" }, { 2, "Child + Adult" }, { 3, "Fierce Deity" }, { 4, "All" },
+};
+static const std::map<int32_t, const char*> maskFitFormValues = {
+    { 0, "Off" }, { 1, "Adult" }, { 2, "Fierce Deity" }, { 3, "Both" },
+};
+static const std::map<int32_t, const char*> mmFormHumanFdValues = {
+    { 0, "Off" }, { 1, "Human" }, { 2, "Fierce Deity" }, { 3, "All" },
+};
+
+extern "C" void GiveFierceDeityMask(void); // FD: fierce_deity_items.c
+
 void SohMenu::AddMenuEnhancements() {
     // Add Enhancements Menu
     AddMenuEntry("Enhancements", CVAR_SETTING("Menu.EnhancementsSidebarSection"));
@@ -2098,6 +2118,125 @@ void SohMenu::AddMenuEnhancements() {
             .CVar(timer.timeEnable)
             .Callback([](WidgetInfo& info) { TimeDisplayUpdateDisplayOptions(); });
     }
+
+    // FD (aegiker RE->SoH port; re-added to ComboShip P3): Transformation Masks.
+    path.sidebarName = "Transformation Masks";
+    AddSidebarEntry("Enhancements", path.sidebarName, 1);
+    path.column = SECTION_COLUMN_1;
+
+    // Give-mask action pinned to the TOP so it keeps a stable position as settings are added below.
+    AddWidget(path, "Give Fierce Deity's Mask", WIDGET_BUTTON)
+        .Options(ButtonOptions()
+                     .Tooltip("Gives you the Fierce Deity's Mask and equips it to a free C button. Must be in-game.")
+                     .Size(Sizes::Inline))
+        .Callback([](WidgetInfo& info) {
+            if (gPlayState != NULL) {
+                GiveFierceDeityMask();
+            }
+        });
+
+    AddWidget(path, "Form Rules", WIDGET_SEPARATOR_TEXT);
+    AddWidget(path, "Forms Wear Trade Masks", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_CHEAT("TransformationMasks.FormsWearTradeMasks"))
+        .Options(CheckboxOptions().DefaultValue(false).Tooltip(
+            "Lets your transformed forms wear the child trade masks (Bunny Hood, Mask of Truth, and so on) "
+            "without turning back or having them unequipped."));
+    AddWidget(path, "Stuck Safeguards (Navi turn-back prompt)", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("TransformationMasks.StuckSafeguards"))
+        .Options(CheckboxOptions().DefaultValue(true).Tooltip(
+            "Has Navi offer to turn you back into a human wherever a form could get stuck, like the Water "
+            "Temple, so you can't soft-lock."));
+    AddWidget(path, "Prevent Restricted Actions (\"current form!\")", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_CHEAT("TransformationMasks.PreventRestrictedActions"))
+        .Options(CheckboxOptions().DefaultValue(true).Tooltip(
+            "Stops forms from pulling the Master Sword or riding Epona. Navi says you can't do that in your "
+            "current form."));
+
+    AddWidget(path, "Fierce Deity", WIDGET_SEPARATOR_TEXT);
+    AddWidget(path, "FD Usable Anywhere", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_CHEAT("TransformationMasks.FdUsableAnywhere"))
+        .Options(CheckboxOptions().DefaultValue(false).Tooltip(
+            "Lets you use the Fierce Deity's Mask anywhere. When off, it only works in boss rooms and the "
+            "fishing hole, and you turn back when you leave, matching Majora's Mask."));
+    AddWidget(path, "FD Can Play Ocarina", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_CHEAT("TransformationMasks.FdCanPlayOcarina"))
+        .Options(CheckboxOptions().DefaultValue(false).Tooltip(
+            "Lets Fierce Deity play the ocarina instead of graying it out."));
+    AddWidget(path, "FD Can Sheathe Sword", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_CHEAT("TransformationMasks.FdCanSheathe"))
+        .Options(CheckboxOptions().DefaultValue(false).Tooltip(
+            "Lets Fierce Deity put his sword away, which he normally keeps drawn."));
+    AddWidget(path, "FD Magic Spin", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_CHEAT("TransformationMasks.FdMagicSpin"))
+        .Options(CheckboxOptions().DefaultValue(false).Tooltip(
+            "Gives Fierce Deity's spin attack its glowing energy disk. When off, his spin is a plain "
+            "magicless sweep, matching Majora's Mask."));
+    AddWidget(path, "FD Increased Strength", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_CHEAT("TransformationMasks.FdIncreasedStrength"))
+        .Options(CheckboxOptions().DefaultValue(false).Tooltip(
+            "Gives Fierce Deity the lifting strength of the Gold Gauntlets, so he can pick up the heaviest "
+            "objects."));
+    AddWidget(path, "Unrestrict Items for FD", WIDGET_CVAR_COMBOBOX)
+        .CVar(CVAR_CHEAT("TransformationMasks.FdUnrestrictItems"))
+        .Options(ComboboxOptions()
+                     .ComboMap(fdUnrestrictItemsValues)
+                     .DefaultIndex(0)
+                     .Tooltip("Lets Fierce Deity use items he'd normally have grayed out."));
+
+    AddWidget(path, "Appearance", WIDGET_SEPARATOR_TEXT);
+    AddWidget(path, "Fierce Deity Tunic Color", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_CHEAT("TransformationMasks.FdTunicColorEnabled"))
+        .Options(CheckboxOptions().DefaultValue(false).Tooltip(
+            "Recolors Fierce Deity's cloth (hat and tunic shoulders/skirt/collar) by tinting its dedicated "
+            "palette. Shared with Cosmetics Editor -> Link -> \"Fierce Deity Tunic\"."));
+    AddWidget(path, "Tunic Color", WIDGET_CVAR_COLOR_PICKER)
+        .CVar(CVAR_COSMETIC("Link.FierceDeityTunic"))
+        .Options(ColorPickerOptions()
+                     .DefaultValue(Color_RGBA8{ 255, 255, 255, 255 })
+                     .Tooltip("The tint multiplied onto Fierce Deity's cloth palette. Requires \"Fierce Deity "
+                              "Tunic Color\" to be on."));
+
+    // FD (aegiker RE->SoH port; re-added to ComboShip P3): Bonus Settings -- Majora's-Mask-flavored ports.
+    path.sidebarName = "Bonus Settings";
+    AddSidebarEntry("Enhancements", path.sidebarName, 1);
+    path.column = SECTION_COLUMN_1;
+
+    AddWidget(path, "Majora's Mask", WIDGET_SEPARATOR_TEXT);
+    AddWidget(path, "MM Jump Flips", WIDGET_CVAR_COMBOBOX)
+        .CVar(CVAR_ENHANCEMENT("BonusSettings.MmFlips"))
+        .Options(ComboboxOptions()
+                     .ComboMap(mmFlipsFormValues)
+                     .DefaultIndex(0)
+                     .Tooltip("Gives running jumps Majora's Mask's animations (front-flip / somersault) for the "
+                              "chosen forms. Purely an animation change. Off leaves the vanilla jump untouched."));
+    AddWidget(path, "MM Young Link Hookshot Sound", WIDGET_CVAR_CHECKBOX)
+        .CVar(CVAR_ENHANCEMENT("BonusSettings.MmYoungLinkHookshotSound"))
+        .Options(CheckboxOptions().DefaultValue(true).Tooltip(
+            "When Young Link uses the hookshot (with Timeless Equipment), plays his own Majora's Mask grapple "
+            "sound instead of Adult Link's."));
+    AddWidget(path, "MM Ledge Momentum", WIDGET_CVAR_COMBOBOX)
+        .CVar(CVAR_ENHANCEMENT("BonusSettings.MmLedgeMomentum"))
+        .Options(ComboboxOptions()
+                     .ComboMap(mmFormHumanFdValues)
+                     .DefaultIndex(2)
+                     .Tooltip("Gives the chosen form(s) Majora's Mask's airborne feel: above-cap momentum from a "
+                              "running jump is carried and bled off gradually. Off keeps OoT's hard air speed cap."));
+    AddWidget(path, "MM Roll Attack Damage", WIDGET_CVAR_COMBOBOX)
+        .CVar(CVAR_ENHANCEMENT("BonusSettings.MmRollDamage"))
+        .Options(ComboboxOptions()
+                     .ComboMap(mmFormHumanFdValues)
+                     .DefaultIndex(2)
+                     .Tooltip("Lets the chosen form(s) deal light contact damage while rolling, like Majora's Mask. "
+                              "Off keeps OoT's vanilla damage-less roll."));
+
+    AddWidget(path, "Trade Masks", WIDGET_SEPARATOR_TEXT);
+    AddWidget(path, "Bunny Hood Fit", WIDGET_CVAR_COMBOBOX)
+        .CVar(CVAR_ENHANCEMENT("BonusSettings.MaskFit"))
+        .Options(ComboboxOptions()
+                     .ComboMap(maskFitFormValues)
+                     .DefaultIndex(3)
+                     .Tooltip("The Bunny Hood is made for Young Link's head, so on the taller Adult and Fierce Deity "
+                              "heads it sinks down. This lifts it back up for the chosen form(s). Off = vanilla."));
 }
 
 } // namespace SohGui
