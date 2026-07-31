@@ -350,6 +350,12 @@ std::string AudioCollection::GetCvarLockKey(std::string sfxKey) {
 
 void AudioCollection::AddToCollection(char* otrPath, uint16_t seqNum) {
     std::string fileName = std::filesystem::path(otrPath).filename().string();
+    // FD (aegiker RE->SoH port): every custom/music/FD_* resource in fd.o2r (transform scream / face-change /
+    // mask-attach / flash cutscene audio + the get-mask jingle) is INTERNAL Fierce Deity audio, not user-swappable
+    // game music. They still play in-game via FdAudio; skip the whole FD_ namespace so the Audio Editor ignores them.
+    if (fileName.rfind("FD_", 0) == 0) {
+        return;
+    }
     std::vector<std::string> splitFileName = StringHelper::Split(fileName, "_");
     std::string sequenceName = splitFileName[0];
     SeqType type = SEQ_BGM_CUSTOM;

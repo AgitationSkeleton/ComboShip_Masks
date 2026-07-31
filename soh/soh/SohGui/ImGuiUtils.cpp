@@ -144,6 +144,8 @@ std::map<uint32_t, ItemMapEntry> gregMapping = {
 std::map<uint32_t, ItemMapEntry> customItemsMapping = {
     { RG_TRIFORCE_PIECE, { RG_TRIFORCE_PIECE, "RG_TRIFORCE_PIECE", "RG_TRIFORCE_PIECE_Faded", gTriforcePieceTex } },
     { RG_ROCS_FEATHER, { RG_ROCS_FEATHER, "RG_ROCS_FEATHER", "RG_ROCS_FEATHER_Faded", gRocsFeatherTex } },
+    // FD (aegiker RE->SoH port): Fierce Deity's Mask tracker icon (non-rando item; keyed by ITEM_MASK_DEITY).
+    { ITEM_MASK_DEITY, { ITEM_MASK_DEITY, "FierceDeityMask", "FierceDeityMask_Faded", gFierceDeityMaskTex } },
     { RG_GOHMA_SOUL, { RG_GOHMA_SOUL, "RG_GOHMA_SOUL", "RG_GOHMA_SOUL_Faded", gBossSoulTex } },
     { RG_KING_DODONGO_SOUL,
       { RG_KING_DODONGO_SOUL, "RG_KING_DODONGO_SOUL", "RG_KING_DODONGO_SOUL_Faded", gBossSoulTex } },

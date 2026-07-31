@@ -115,7 +115,9 @@ void EnBox_Init(Actor* thisx, PlayState* play2) {
     f32 endFrame;
 
     animFrameStart = 0.0f;
-    anim = sAnimations[((void)0, gSaveContext.linkAge)];
+    // FD (aegiker RE->SoH port): clamp Fierce Deity (LINK_AGE_DEITY=2) to the adult chest anim (sAnimations is
+    // [adult,child]); index 2 would be OUT OF BOUNDS and crash when FD opens a chest.
+    anim = sAnimations[(gSaveContext.linkAge > LINK_AGE_CHILD) ? LINK_AGE_ADULT : ((void)0, gSaveContext.linkAge)];
     colHeader = NULL;
     endFrame = Animation_GetLastFrame(anim);
     Actor_ProcessInitChain(&this->dyna.actor, sInitChain);
@@ -420,7 +422,9 @@ void EnBox_WaitOpen(EnBox* this, PlayState* play) {
     this->alpha = 255;
     this->movementFlags |= ENBOX_MOVE_IMMOBILE;
     if (this->unk_1F4 != 0) { // unk_1F4 is modified by player code
-        linkAge = gSaveContext.linkAge;
+        // FD (aegiker RE->SoH port) CHEST CRASH FIX: sAnimations is [adult,child] x [open,close] (4 entries).
+        // Deity linkAge=2 -> (unk_1F4<0 ? 2:0) + 2 = 2 or 4 -> index 4 is OUT OF BOUNDS. Clamp deity to the adult anim.
+        linkAge = (gSaveContext.linkAge > LINK_AGE_CHILD) ? LINK_AGE_ADULT : gSaveContext.linkAge;
         anim = sAnimations[(this->unk_1F4 < 0 ? 2 : 0) + linkAge];
         frameCount = Animation_GetLastFrame(anim);
         Animation_Change(&this->skelanime, anim, 1.5f, 0, frameCount, ANIMMODE_ONCE, 0.0f);

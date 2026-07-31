@@ -1,5 +1,6 @@
 #include "SaveManager.h"
 #include "OTRGlobals.h"
+#include "Enhancements/FierceDeityMaskCycle.h" // FD (aegiker RE->SoH port): save-audit scrub of the fake FD-mask slot
 #include "Enhancements/game-interactor/GameInteractor.h"
 #include "Enhancements/randomizer/SeedContext.h"
 #include "Enhancements/randomizer/entrance.h"
@@ -1319,6 +1320,10 @@ void SaveManager::SaveSection(int fileNum, int sectionID, bool threaded) {
     }
     auto saveContext = new SaveContext;
     memcpy(saveContext, &gSaveContext, sizeof(gSaveContext));
+    // FD (aegiker RE->SoH port) save-audit: the Fierce Deity's Mask is shown as a fake ITEM_MASK_DEITY in
+    // SLOT_BOTTLE_1 (see FierceDeityMaskCycle). Scrub the COPY (not the live menu) so the persisted slot is always
+    // the real bottle -- the bottle can never be lost on reload, and the mask lives solely on ship.hasFierceDeityMask.
+    Enhancement_ScrubDeityMaskFromItems(saveContext->inventory.items);
     if (threaded) {
         smThreadPool->detach_task(std::bind(&SaveManager::SaveFileThreaded, this, fileNum, saveContext, sectionID));
     } else {
@@ -2259,6 +2264,13 @@ void SaveManager::LoadBaseVersion4() {
     SaveManager::Instance->LoadData("dogParams", gSaveContext.dogParams);
     SaveManager::Instance->LoadData("filenameLanguage", gSaveContext.ship.filenameLanguage);
     SaveManager::Instance->LoadData("maskMemory", gSaveContext.ship.maskMemory);
+    // FD (aegiker RE->SoH port): restore Fierce Deity's Mask ownership + un-transform restore state. The mask is
+    // not a real inventory item (it lives on ship.hasFierceDeityMask), so it must be serialized or it "vanishes"
+    // on reload. Defaults keep old saves valid: 0 = not owned, 0xFF = not transformed, ITEM_NONE = no stashed item.
+    SaveManager::Instance->LoadData("hasFierceDeityMask", gSaveContext.ship.hasFierceDeityMask);
+    SaveManager::Instance->LoadData("fierceDeityPreviousForm", gSaveContext.ship.fierceDeityPreviousForm, (u8)0xFF);
+    SaveManager::Instance->LoadData("fierceDeityBButtonMemory", gSaveContext.ship.fierceDeityBButtonMemory,
+                                    (u8)ITEM_NONE);
 }
 
 void SaveManager::SaveBase(SaveContext* saveContext, int sectionID, bool fullSave) {
@@ -2425,6 +2437,11 @@ void SaveManager::SaveBase(SaveContext* saveContext, int sectionID, bool fullSav
     SaveManager::Instance->SaveData("dogParams", saveContext->dogParams);
     SaveManager::Instance->SaveData("filenameLanguage", saveContext->ship.filenameLanguage);
     SaveManager::Instance->SaveData("maskMemory", saveContext->ship.maskMemory);
+    // FD (aegiker RE->SoH port): persist Fierce Deity's Mask ownership + un-transform restore state so the mask
+    // survives save/reload (it is not a real inventory item). Mirrors the LoadData calls in LoadBaseVersion4.
+    SaveManager::Instance->SaveData("hasFierceDeityMask", saveContext->ship.hasFierceDeityMask);
+    SaveManager::Instance->SaveData("fierceDeityPreviousForm", saveContext->ship.fierceDeityPreviousForm);
+    SaveManager::Instance->SaveData("fierceDeityBButtonMemory", saveContext->ship.fierceDeityBButtonMemory);
 }
 
 // Load a string into a char array based on size and ensuring it is null terminated when overflowed
