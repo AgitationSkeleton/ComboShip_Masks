@@ -1,8 +1,11 @@
 # In variables: patch_file, with_reset
 
 function(patch)
+    # --ignore-whitespace: on Windows checkouts the patch/source context can differ by
+    # trailing/EOL whitespace (e.g. stormlib v9.25), which makes a bare `git apply` fail even
+    # though the change is correct. Relaxing whitespace matching can't misapply a valid patch.
     execute_process(
-        COMMAND git apply ${patch_file}
+        COMMAND git apply --ignore-whitespace ${patch_file}
         RESULT_VARIABLE ret
         ERROR_QUIET
     )
@@ -11,7 +14,7 @@ endfunction()
 
 function(check_patch)
     execute_process(
-        COMMAND git apply --reverse --check ${patch_file}
+        COMMAND git apply --reverse --check --ignore-whitespace ${patch_file}
         RESULT_VARIABLE ret
         ERROR_QUIET
     )

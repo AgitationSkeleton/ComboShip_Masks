@@ -24,6 +24,7 @@
 #include <windows.h>
 #include <commdlg.h>
 #pragma comment(lib, "comdlg32") // GetOpenFileNameA — comboui doesn't otherwise link comdlg32
+#include <cstdlib>               // _putenv_s — hand the MM ROM path to soh.dll for fd.o2r generation
 #endif
 
 using ComboRando::ComboMenu_PopButton;
@@ -289,6 +290,13 @@ extern "C" __declspec(dllexport) int ComboUI_RunExtraction(const ComboExtractCal
                             phase = FAILED;
                         }
                     } else {
+                        // FD (ComboShip): when the Majora's Mask ROM (slot 1) extraction begins, hand its path to
+                        // soh.dll via SOH_FD_MM_ROM so fd.o2r (Fierce Deity assets) is generated silently from the
+                        // SAME ROM at OoT-side init (OTRGlobals reads this env var). Shared dynamic CRT (-md) makes
+                        // it visible across DLLs. No separate MM prompt — reuses ComboShip's own MM extraction.
+                        if (next == 1 && !slots[next].path.empty()) {
+                            _putenv_s("SOH_FD_MM_ROM", slots[next].path.c_str());
+                        }
                         activeSlot = next;
                         slots[next].started = slots[next].start && slots[next].start(slots[next].path.c_str());
                         if (!slots[next].started) {

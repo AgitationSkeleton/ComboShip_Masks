@@ -79,6 +79,7 @@
 
 #if not defined(__SWITCH__) && not defined(__WIIU__)
 #include "Extractor/Extract.h"
+#include "Extractor/FdO2rGen.h" // FD: fd.o2r (Fierce Deity assets) generation from the MM ROM
 #endif
 
 #include <fast/interpreter.h>
@@ -882,6 +883,28 @@ void OTRGlobals::Initialize() {
     std::string ootPath = Ship::Context::LocateFileAcrossAppDirs("oot.o2r", appShortName);
     if (std::filesystem::exists(ootPath)) {
         context->GetResourceManager()->GetArchiveManager()->AddArchive(ootPath);
+    }
+
+    // FD (ComboShip 2026-07-30): generate fd.o2r (Fierce Deity assets) from the Majora's Mask ROM if it's absent,
+    // BEFORE mounting. In ComboShip the MM ROM path is handed to us via the SOH_FD_MM_ROM env var, set by the
+    // combo MM-extraction step (combo/gui/ComboExtractScreen.cpp) — so FdO2rGen::Generate runs fully silently
+    // (its autoMode reads SOH_FD_MM_ROM and skips every dialog). We gate on the env var so this never prompts on
+    // its own; if it's unset (no MM ROM provided) we just skip and boot without the FD form.
+    {
+        const char* fdMmRom = std::getenv("SOH_FD_MM_ROM");
+        if (fdMmRom != nullptr && fdMmRom[0] != '\0' && FdO2rGen::NeedsGeneration(appShortName)) {
+            FdO2rGen::Generate(Ship::Context::GetAppBundlePath(), Ship::Context::GetAppDirectoryPath(appShortName),
+                               appShortName);
+        }
+    }
+
+    // FD (2026-07-12) #2: load fd.o2r as a first-class archive from the Release/app dir (beside soh.o2r),
+    // NOT from mods/. Added last so its resources overlay gameplay_keep / object_link_boy in the base
+    // (ArchiveManager: last archive added wins for a duplicate __OTR__ path). Missing fd.o2r just skips
+    // (boots as vanilla ComboShip OoT), same as the oot.o2r guard above.
+    std::string fdPath = Ship::Context::LocateFileAcrossAppDirs("fd.o2r", appShortName);
+    if (std::filesystem::exists(fdPath)) {
+        context->GetResourceManager()->GetArchiveManager()->AddArchive(fdPath);
     }
 
     std::unordered_set<uint32_t> ValidHashes = {
