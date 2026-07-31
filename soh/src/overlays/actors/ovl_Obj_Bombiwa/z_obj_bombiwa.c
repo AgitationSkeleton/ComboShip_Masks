@@ -126,8 +126,15 @@ void ObjBombiwa_Update(Actor* thisx, PlayState* play) {
     ObjBombiwa* this = (ObjBombiwa*)thisx;
     s32 pad;
 
+    // FD (aegiker RE->SoH port) "FD Beams Break Rocks" cheat: detect the En_M_Thunder beam actor that dealt the AC
+    // hit (its clean 0x200 dmgFlags pass the bombiwa bumper mask, but carry none of the 0x40000040 hammer bits).
+    // Real Megaton Hammer hits still break unconditionally; the beam is cheat-gated.
+    s32 fdBeamBreak = (this->collider.base.acFlags & AC_HIT) && (this->collider.base.ac != NULL) &&
+                      (this->collider.base.ac->id == ACTOR_EN_M_THUNDER) &&
+                      CVarGetInteger(CVAR_CHEAT("TransformationMasks.FdBeamsBreakRocks"), 0);
     if ((func_80033684(play, &this->actor) != NULL) ||
-        ((this->collider.base.acFlags & AC_HIT) && (this->collider.info.acHitInfo->toucher.dmgFlags & 0x40000040))) {
+        ((this->collider.base.acFlags & AC_HIT) && (this->collider.info.acHitInfo->toucher.dmgFlags & 0x40000040)) ||
+        fdBeamBreak) {
         ObjBombiwa_Break(this, play);
         Flags_SetSwitch(play, this->actor.params & 0x3F);
         SoundSource_PlaySfxAtFixedWorldPos(play, &this->actor.world.pos, 80, NA_SE_EV_WALL_BROKEN);

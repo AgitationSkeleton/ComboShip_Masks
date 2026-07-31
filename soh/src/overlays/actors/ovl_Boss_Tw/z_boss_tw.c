@@ -2845,6 +2845,69 @@ static s16 D_8094A90C[] = {
     0, 1, 2, 2, 2, 2, 2, 2, 1,
 };
 
+
+// FD (2026-07-12) BOSS PARITY (aegiker): a Fierce Deity great sword beam substitutes for the reflected-magic hit in
+// Twinrova's fight -- for the individual sisters (Koume/Kotake) it triggers the same HitByBeam reaction the ping-pong
+// beam duel does, and for merged Twinrova it deals the mirror-shield-reflection damage. The aegiker composite carries
+// DMG_SWORD_BEAM which her body test detects; SoH's beam is sword-tier and her collider (0xFFCDFFFE bumper) accepts
+// it, so detect the beam by ACTOR on an AC hit. RE Boss_Tw z_boss_tw.c:2845/2885/3056.
+u8 BossTw_FindSwordBeam(BossTw* this, PlayState* play, f32 scale) {
+    if ((this->collider.base.acFlags & AC_HIT) && EnMThunder_IsFdSwordBeam(this->collider.base.ac)) {
+        this->collider.base.acFlags &= ~AC_HIT;
+        return true;
+    }
+    return false;
+}
+
+void BossTw_CheckForSwordbeam(BossTw* this, PlayState* play) {
+    BossTw* otherTw = (BossTw*)this->actor.parent;
+    s16 i;
+
+    if ((this->actionFunc != BossTw_HitByBeam) && BossTw_FindSwordBeam(this, play, 60.0f)) {
+        for (i = 0; i < 50; i++) {
+            Vec3f pos;
+            Vec3f velocity;
+            Vec3f accel = { 0.0f, 0.0f, 0.0f };
+
+            pos.x = this->actor.world.pos.x + Rand_CenteredFloat(50.0f);
+            pos.y = this->actor.world.pos.y + Rand_CenteredFloat(50.0f);
+            pos.z = this->actor.world.pos.z + Rand_CenteredFloat(50.0f);
+            velocity.x = Rand_CenteredFloat(20.0f);
+            velocity.y = Rand_CenteredFloat(20.0f);
+            velocity.z = Rand_CenteredFloat(20.0f);
+            BossTw_AddFlameEffect(play, &pos, &velocity, &accel, Rand_ZeroFloat(10.0f) + 25.0f, otherTw->actor.params);
+        }
+
+        BossTw_SetupHitByBeam(this, play);
+        Audio_PlayActorSound2(&this->actor, NA_SE_EN_TWINROBA_DAMAGE_VOICE);
+        this->actor.colChkInfo.health++;
+
+        // reset beam-duel parameters (RE z_boss_tw.c:2913)
+        this->timers[1] = 70;
+        this->csState1 = 0;
+        this->beamDist = 0.0f;
+        this->beamReflectionDist = 0.0f;
+        this->beamShootState = -1;
+        this->beamScale = 0.01f;
+        this->flameAlpha = 0.0f;
+        this->spawnPortalAlpha = 0.0f;
+        this->spawnPortalScale = 2000.0f;
+        this->updateRate1 = 0.0f;
+        this->portalRotation = 0.0f;
+        this->updateRate2 = 0.0f;
+    }
+}
+
+void BossTw_TwinrovaCheckForSwordbeam(BossTw* this, PlayState* play) {
+    if (this->actor.colChkInfo.health > 0) {
+        if ((this->actionFunc != BossTw_TwinrovaStun) && BossTw_FindSwordBeam(this, play, 100.0f)) {
+            BossTw_TwinrovaDamage(this, play, 0);
+            Audio_PlayActorSound2(&this->actor, NA_SE_EN_TWINROBA_YOUNG_DAMAGE);
+        }
+    }
+}
+
+
 void BossTw_Update(Actor* thisx, PlayState* play) {
     BossTw* this = (BossTw*)thisx;
     Player* player = GET_PLAYER(play);
@@ -2890,6 +2953,7 @@ void BossTw_Update(Actor* thisx, PlayState* play) {
     }
 
     this->actionFunc(this, play);
+    BossTw_CheckForSwordbeam(this, play); // FD (aegiker RE->SoH port): sisters take the beam like the reflected duel
 
     if (this->actionFunc != BossTw_Wait) {
         this->collider.dim.radius = 45;
@@ -3000,6 +3064,7 @@ void BossTw_TwinrovaUpdate(Actor* thisx, PlayState* play2) {
     }
 
     this->actionFunc(this, play);
+    BossTw_TwinrovaCheckForSwordbeam(this, play); // FD (aegiker RE->SoH port): merged Twinrova beam-damage
 
     if (this->actionFunc != BossTw_TwinrovaShootBlast && this->actionFunc != BossTw_TwinrovaChargeBlast &&
         this->visible && this->unk_5F8 == 0 &&

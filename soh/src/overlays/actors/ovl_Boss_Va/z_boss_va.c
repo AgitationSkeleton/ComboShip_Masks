@@ -1175,6 +1175,27 @@ void BossVa_BodyPhase2(BossVa* this, PlayState* play) {
         }
     }
 
+    // FD (aegiker RE->SoH port) BOSS PARITY: a Fierce Deity great sword beam near Barinade's core substitutes for
+    // the boomerang stun. Our beam is sword-tier (0x200), so scan for the beam actor near the core and trigger the
+    // SAME stun the boomerang does (open the core, swap to the 0xFC00712 mask that accepts the beam's 0x200).
+    if (this->colliderBody.info.bumper.dmgFlags == 0x10) {
+        Actor* beam = play->actorCtx.actorLists[ACTORCAT_ITEMACTION].head;
+
+        while (beam != NULL) {
+            if (EnMThunder_IsFdSwordBeam(beam) &&
+                (fabsf(beam->world.pos.x - this->actor.world.pos.x) < 50.0f) &&
+                (fabsf(beam->world.pos.y - this->actor.world.pos.y) < 50.0f) &&
+                (fabsf(beam->world.pos.z - this->actor.world.pos.z) < 50.0f)) {
+                sPhase2Timer &= 0xFE00;
+                Actor_SetColorFilter(&this->actor, 0, 255, 0, 160);
+                this->colliderBody.info.bumper.dmgFlags = 0xFC00712;
+                Audio_PlayActorSound2(&this->actor, NA_SE_EN_BALINADE_FAINT);
+                break;
+            }
+            beam = beam->next;
+        }
+    }
+
     if (this->colliderBody.base.acFlags & AC_HIT) {
         this->colliderBody.base.acFlags &= ~AC_HIT;
 

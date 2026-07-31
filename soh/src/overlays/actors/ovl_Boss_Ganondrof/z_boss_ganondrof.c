@@ -1188,10 +1188,30 @@ void BossGanondrof_Death(BossGanondrof* this, PlayState* play) {
     }
 }
 
+// FD (aegiker RE->SoH port) BOSS PARITY: Phantom Ganon normally can only be hurt by reflecting his energy ball
+// back at him; the FD sword beam lets the deity damage him directly. Scan the item-action list for a great FD beam
+// within +-40 units of Ganondrof. Treated as a hit in CollisionCheck below.
+u8 BossGanondrof_FindSwordBeam(BossGanondrof* this, PlayState* play) {
+    Actor* beam = play->actorCtx.actorLists[ACTORCAT_ITEMACTION].head;
+
+    while (beam != NULL) {
+        if (EnMThunder_IsFdSwordBeam(beam) &&
+            (fabsf(beam->world.pos.x - this->actor.world.pos.x) < 40.0f) &&
+            (fabsf(beam->world.pos.y - this->actor.world.pos.y) < 40.0f) &&
+            (fabsf(beam->world.pos.z - this->actor.world.pos.z) < 40.0f)) {
+            return true;
+        }
+        beam = beam->next;
+    }
+    return false;
+}
+
 void BossGanondrof_CollisionCheck(BossGanondrof* this, PlayState* play) {
     s32 acHit;
     EnfHG* horse = (EnfHG*)this->actor.child;
-    ColliderInfo* hurtbox;
+    ColliderInfo* hurtbox = NULL;
+    // FD (aegiker RE->SoH port): a nearby FD great sword beam counts as a hit even without AC contact.
+    u8 swordBeamed = BossGanondrof_FindSwordBeam(this, play);
 
     if (this->work[GND_INVINC_TIMER] != 0) {
         this->work[GND_INVINC_TIMER]--;
@@ -1199,7 +1219,7 @@ void BossGanondrof_CollisionCheck(BossGanondrof* this, PlayState* play) {
         this->colliderBody.base.acFlags &= ~AC_HIT;
     } else {
         acHit = this->colliderBody.base.acFlags & AC_HIT;
-        if ((acHit && ((s8)this->actor.colChkInfo.health > 0)) || (this->returnCount != 0)) {
+        if (((acHit || swordBeamed) && ((s8)this->actor.colChkInfo.health > 0)) || (this->returnCount != 0)) {
             if (acHit) {
                 this->colliderBody.base.acFlags &= ~AC_HIT;
                 hurtbox = this->colliderBody.info.acHitInfo;
@@ -1208,7 +1228,7 @@ void BossGanondrof_CollisionCheck(BossGanondrof* this, PlayState* play) {
                 if (acHit && (this->actionFunc != BossGanondrof_Stunned) && (hurtbox->toucher.dmgFlags & 0x0001F8A4)) {
                     Audio_PlayActorSound2(&this->actor, NA_SE_PL_WALK_GROUND - SFX_FLAG);
                     osSyncPrintf("hit != 0 \n");
-                } else if (this->actionFunc != BossGanondrof_Charge) {
+                } else if ((this->actionFunc != BossGanondrof_Charge) || swordBeamed) {
                     if (this->returnCount == 0) {
                         u8 dmg;
                         u8 canKill = false;
