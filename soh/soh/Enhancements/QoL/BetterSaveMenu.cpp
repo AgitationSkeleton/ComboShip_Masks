@@ -102,6 +102,14 @@ void HandleSaveMenu(bool* should, PlayState* play) {
         case 4:
             *should = false;
             if (Message_GetState(&play->msgCtx) == TEXT_STATE_CHOICE && Message_ShouldAdvance(play)) {
+                // FD (ComboShip): while the Fierce Deity's Mask is worn, gSaveContext.linkAge is LINK_AGE_DEITY —
+                // neither child nor adult — so the age-keyed Return-to-Spawn destinations below fell through to the
+                // adult (Temple of Time) branch even for a child. Resolve to the real underlying form he reverts to,
+                // so a young Fierce Deity returns to Link's House and an adult one to the Temple of Time.
+                u8 fdEffAge = LINK_IS_DEITY ? gSaveContext.ship.fierceDeityPreviousForm : (u8)gSaveContext.linkAge;
+                if (fdEffAge > LINK_AGE_CHILD) {
+                    fdEffAge = LINK_AGE_ADULT; // clamp (fierceDeityPreviousForm == 0xFF "not transformed" -> adult)
+                }
                 switch (play->msgCtx.choiceIndex) {
                     case 0:
                         // Continue
@@ -125,7 +133,7 @@ void HandleSaveMenu(bool* should, PlayState* play) {
                         Sram_OpenSave();
                         if (!IsSceneDungeon(gSaveContext.savedSceneNum)) {
                             if (IS_RANDO && Randomizer_GetSettingValue(RSK_SHUFFLE_OVERWORLD_SPAWNS)) {
-                                if (LINK_AGE_IN_YEARS == YEARS_ADULT) {
+                                if (fdEffAge == LINK_AGE_ADULT) {
                                     gSaveContext.entranceIndex = ENTR_HYRULE_FIELD_10;
                                 }
                                 gSaveContext.entranceIndex = Entrance_OverrideNextIndex(gSaveContext.entranceIndex);
@@ -140,10 +148,10 @@ void HandleSaveMenu(bool* should, PlayState* play) {
                                                &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
                         Play_SaveSceneFlags(play);
                         Sram_OpenSave();
-                        gSaveContext.entranceIndex = (LINK_AGE_IN_YEARS == YEARS_CHILD) ? ENTR_LINKS_HOUSE_CHILD_SPAWN
-                                                                                        : ENTR_TEMPLE_OF_TIME_WARP_PAD;
+                        gSaveContext.entranceIndex = (fdEffAge == LINK_AGE_CHILD) ? ENTR_LINKS_HOUSE_CHILD_SPAWN
+                                                                                 : ENTR_TEMPLE_OF_TIME_WARP_PAD;
                         if (IS_RANDO && Randomizer_GetSettingValue(RSK_SHUFFLE_OVERWORLD_SPAWNS)) {
-                            if (LINK_AGE_IN_YEARS == YEARS_ADULT) {
+                            if (fdEffAge == LINK_AGE_ADULT) {
                                 gSaveContext.entranceIndex = ENTR_HYRULE_FIELD_10;
                             }
                             gSaveContext.entranceIndex = Entrance_OverrideNextIndex(gSaveContext.entranceIndex);

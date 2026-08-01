@@ -2193,13 +2193,17 @@ void SohMenu::AddMenuEnhancements() {
         .CVar(CVAR_CHEAT("TransformationMasks.FdTunicColorEnabled"))
         .Options(CheckboxOptions().DefaultValue(false).Tooltip(
             "Recolors Fierce Deity's cloth (hat and tunic shoulders/skirt/collar) by tinting its dedicated "
-            "palette. Shared with Cosmetics Editor -> Link -> \"Fierce Deity Tunic\"."));
-    AddWidget(path, "Tunic Color", WIDGET_CVAR_COLOR_PICKER)
-        .CVar(CVAR_COSMETIC("Link.FierceDeityTunic"))
-        .Options(ColorPickerOptions()
-                     .DefaultValue(Color_RGBA8{ 255, 255, 255, 255 })
-                     .Tooltip("The tint multiplied onto Fierce Deity's cloth palette. Requires \"Fierce Deity "
-                              "Tunic Color\" to be on."));
+            "palette. Choose the tint in Cosmetics Editor -> Link -> \"Fierce Deity Tunic\"."));
+    // FD (ComboShip): the WIDGET_CVAR_COLOR_PICKER renders malformed (and non-functional) inside ComboShip's menu
+    // framework here, unlike soh_fd. Since the SAME color lives in Cosmetics Editor -> Link -> "Fierce Deity Tunic"
+    // (which works), we drop the in-menu picker and point players there instead. This is the one deliberate
+    // deviation from soh_fd's Transformation Masks menu. The enable checkbox above stays (it gates the recolor).
+    // AddWidget(path, "Tunic Color", WIDGET_CVAR_COLOR_PICKER)
+    //     .CVar(CVAR_COSMETIC("Link.FierceDeityTunic"))
+    //     .Options(ColorPickerOptions()
+    //                  .DefaultValue(Color_RGBA8{ 255, 255, 255, 255 })
+    //                  .Tooltip("The tint multiplied onto Fierce Deity's cloth palette. Requires \"Fierce Deity "
+    //                           "Tunic Color\" to be on."));
 
     // FD (aegiker RE->SoH port; re-added to ComboShip P3): Bonus Settings -- Majora's-Mask-flavored ports.
     path.sidebarName = "Bonus Settings";
