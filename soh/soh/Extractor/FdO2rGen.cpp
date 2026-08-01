@@ -161,19 +161,28 @@ static std::vector<uint8_t> MakeWav(const std::vector<int16_t>& pcm, uint32_t sa
     const uint32_t byteRate = sampleRate * 2;
     std::vector<uint8_t> w;
     w.reserve(44 + dataBytes);
-    auto put32 = [&](uint32_t v) { for (int i = 0; i < 4; i++) w.push_back((uint8_t)(v >> (8 * i))); };
-    auto put16 = [&](uint16_t v) { for (int i = 0; i < 2; i++) w.push_back((uint8_t)(v >> (8 * i))); };
-    const char* riff = "RIFF"; w.insert(w.end(), riff, riff + 4);
+    auto put32 = [&](uint32_t v) {
+        for (int i = 0; i < 4; i++)
+            w.push_back((uint8_t)(v >> (8 * i)));
+    };
+    auto put16 = [&](uint16_t v) {
+        for (int i = 0; i < 2; i++)
+            w.push_back((uint8_t)(v >> (8 * i)));
+    };
+    const char* riff = "RIFF";
+    w.insert(w.end(), riff, riff + 4);
     put32(36 + dataBytes);
-    const char* wave = "WAVEfmt "; w.insert(w.end(), wave, wave + 8);
-    put32(16);          // fmt chunk size
-    put16(1);           // PCM
-    put16(1);           // mono
+    const char* wave = "WAVEfmt ";
+    w.insert(w.end(), wave, wave + 8);
+    put32(16); // fmt chunk size
+    put16(1);  // PCM
+    put16(1);  // mono
     put32(sampleRate);
     put32(byteRate);
-    put16(2);           // block align
-    put16(16);          // bits
-    const char* data = "data"; w.insert(w.end(), data, data + 4);
+    put16(2);  // block align
+    put16(16); // bits
+    const char* data = "data";
+    w.insert(w.end(), data, data + 4);
     put32(dataBytes);
     for (int16_t s : pcm) {
         put16((uint16_t)s);
@@ -201,8 +210,7 @@ bool FdO2rGen::NeedsGeneration(const std::string& appShortName) {
     return !std::filesystem::exists(Ship::Context::LocateFileAcrossAppDirs("fd.o2r", appShortName));
 }
 
-bool FdO2rGen::Generate(const std::string& installPath, const std::string& dataPath,
-                        const std::string& appShortName) {
+bool FdO2rGen::Generate(const std::string& installPath, const std::string& dataPath, const std::string& appShortName) {
     // Automation hook (headless / CI): if SOH_FD_MM_ROM points at a Majora's Mask ROM, skip all dialogs and
     // generate fd.o2r from it directly.
     const char* autoRom = std::getenv("SOH_FD_MM_ROM");
@@ -388,9 +396,8 @@ bool FdO2rGen::Generate(const std::string& installPath, const std::string& dataP
 
     if (!ok) {
         if (!autoMode) {
-            Extractor::ShowErrorBox("fd.o2r generation failed",
-                                    "Failed to assemble fd.o2r from the extracted assets. "
-                                    "The Fierce Deity form will be unavailable.");
+            Extractor::ShowErrorBox("fd.o2r generation failed", "Failed to assemble fd.o2r from the extracted assets. "
+                                                                "The Fierce Deity form will be unavailable.");
         }
         std::error_code ec;
         std::filesystem::remove(outPath, ec);

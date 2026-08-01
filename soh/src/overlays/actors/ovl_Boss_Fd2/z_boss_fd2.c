@@ -844,8 +844,7 @@ void BossFd2_CollisionCheck(BossFd2* this, PlayState* play) {
     if (!bossFd->faceExposed) {
         Actor* beam = play->actorCtx.actorLists[ACTORCAT_ITEMACTION].head;
         while (beam != NULL) {
-            if (EnMThunder_IsFdSwordBeam(beam) &&
-                (fabsf(beam->world.pos.x - this->actor.focus.pos.x) < 45.0f) &&
+            if (EnMThunder_IsFdSwordBeam(beam) && (fabsf(beam->world.pos.x - this->actor.focus.pos.x) < 45.0f) &&
                 (fabsf(beam->world.pos.y - this->actor.focus.pos.y) < 45.0f) &&
                 (fabsf(beam->world.pos.z - this->actor.focus.pos.z) < 45.0f)) {
                 fdBeamHeadHit = true;

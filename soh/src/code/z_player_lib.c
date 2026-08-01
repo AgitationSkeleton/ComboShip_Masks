@@ -167,170 +167,134 @@ u8 gPlayerModelTypes[PLAYER_MODELGROUP_MAX][PLAYER_MODELGROUPENTRY_MAX] = {
       PLAYER_MODELTYPE_WAIST },
 };
 
-Gfx* sPlayerRightHandShieldDLs[PLAYER_SHIELD_MAX * (NUM_DL_FORMS * 2)] = { // FD (2026-07-11): widened 4->6 stride
+Gfx* sPlayerRightHandShieldDLs[PLAYER_SHIELD_MAX * (NUM_DL_FORMS * 2)] = {
+    // FD (2026-07-11): widened 4->6 stride
     // PLAYER_SHIELD_NONE
-    gLinkAdultRightHandClosedNearDL,
-    gLinkChildRightHandClosedNearDL,
+    gLinkAdultRightHandClosedNearDL, gLinkChildRightHandClosedNearDL,
     gLinkFierceDeityRightHandDL, // FD (2026-07-11)
-    gLinkAdultRightHandClosedFarDL,
-    gLinkChildRightHandClosedFarDL,
+    gLinkAdultRightHandClosedFarDL, gLinkChildRightHandClosedFarDL,
     gLinkFierceDeityRightHandDL, // FD (2026-07-11)
     // PLAYER_SHIELD_DEKU
-    gLinkAdultRightHandClosedNearDL,
-    gLinkChildRightFistAndDekuShieldNearDL,
+    gLinkAdultRightHandClosedNearDL, gLinkChildRightFistAndDekuShieldNearDL,
     gLinkFierceDeityRightHandDL, // FD (2026-07-11)
-    gLinkAdultRightHandClosedFarDL,
-    gLinkChildRightFistAndDekuShieldFarDL,
+    gLinkAdultRightHandClosedFarDL, gLinkChildRightFistAndDekuShieldFarDL,
     gLinkFierceDeityRightHandDL, // FD (2026-07-11)
     // PLAYER_SHIELD_HYLIAN
-    gLinkAdultRightHandHoldingHylianShieldNearDL,
-    gLinkChildRightHandClosedNearDL,
+    gLinkAdultRightHandHoldingHylianShieldNearDL, gLinkChildRightHandClosedNearDL,
     gLinkFierceDeityRightHandDL, // FD (2026-07-11)
-    gLinkAdultRightHandHoldingHylianShieldFarDL,
-    gLinkChildRightHandClosedFarDL,
+    gLinkAdultRightHandHoldingHylianShieldFarDL, gLinkChildRightHandClosedFarDL,
     gLinkFierceDeityRightHandDL, // FD (2026-07-11)
     // PLAYER_SHIELD_MIRROR
-    gLinkAdultRightHandHoldingMirrorShieldNearDL,
-    gLinkChildRightHandClosedNearDL,
+    gLinkAdultRightHandHoldingMirrorShieldNearDL, gLinkChildRightHandClosedNearDL,
     gLinkFierceDeityRightHandDL, // FD (2026-07-11)
-    gLinkAdultRightHandHoldingMirrorShieldFarDL,
-    gLinkChildRightHandClosedFarDL,
+    gLinkAdultRightHandHoldingMirrorShieldFarDL, gLinkChildRightHandClosedFarDL,
     gLinkFierceDeityRightHandDL, // FD (2026-07-11)
 };
 
-Gfx* sSheathWithSwordDLs[(PLAYER_SHIELD_MAX + 2) * (NUM_DL_FORMS * 2)] = { // FD (2026-07-11): widened 4->6 stride
+Gfx* sSheathWithSwordDLs[(PLAYER_SHIELD_MAX + 2) * (NUM_DL_FORMS * 2)] = {
+    // FD (2026-07-11): widened 4->6 stride
     // PLAYER_SHIELD_NONE
-    gLinkAdultMasterSwordAndSheathNearDL,
-    gLinkChildSwordAndSheathNearDL,
+    gLinkAdultMasterSwordAndSheathNearDL, gLinkChildSwordAndSheathNearDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11): FD has no sheath
-    gLinkAdultMasterSwordAndSheathFarDL,
-    gLinkChildSwordAndSheathFarDL,
+    gLinkAdultMasterSwordAndSheathFarDL, gLinkChildSwordAndSheathFarDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
     // PLAYER_SHIELD_DEKU
-    gLinkAdultMasterSwordAndSheathNearDL,
-    gLinkChildDekuShieldSwordAndSheathNearDL,
+    gLinkAdultMasterSwordAndSheathNearDL, gLinkChildDekuShieldSwordAndSheathNearDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
-    gLinkAdultMasterSwordAndSheathFarDL,
-    gLinkChildDekuShieldSwordAndSheathFarDL,
+    gLinkAdultMasterSwordAndSheathFarDL, gLinkChildDekuShieldSwordAndSheathFarDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
     // PLAYER_SHIELD_HYLIAN
-    gLinkAdultHylianShieldSwordAndSheathNearDL,
-    gLinkChildHylianShieldSwordAndSheathNearDL,
+    gLinkAdultHylianShieldSwordAndSheathNearDL, gLinkChildHylianShieldSwordAndSheathNearDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
-    gLinkAdultHylianShieldSwordAndSheathFarDL,
-    gLinkChildHylianShieldSwordAndSheathFarDL,
+    gLinkAdultHylianShieldSwordAndSheathFarDL, gLinkChildHylianShieldSwordAndSheathFarDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
     // PLAYER_SHIELD_MIRROR
-    gLinkAdultMirrorShieldSwordAndSheathNearDL,
-    gLinkChildSwordAndSheathNearDL,
+    gLinkAdultMirrorShieldSwordAndSheathNearDL, gLinkChildSwordAndSheathNearDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
-    gLinkAdultMirrorShieldSwordAndSheathFarDL,
-    gLinkChildSwordAndSheathFarDL,
+    gLinkAdultMirrorShieldSwordAndSheathFarDL, gLinkChildSwordAndSheathFarDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
     // PLAYER_SHIELD_NONE (child, no sword)
-    NULL,
-    NULL,
+    NULL, NULL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
-    NULL,
-    NULL,
+    NULL, NULL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
     // PLAYER_SHIELD_DEKU (child, no sword)
-    NULL,
-    gLinkChildDekuShieldWithMatrixDL,
+    NULL, gLinkChildDekuShieldWithMatrixDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
-    NULL,
-    gLinkChildDekuShieldWithMatrixDL,
+    NULL, gLinkChildDekuShieldWithMatrixDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
 };
 
-Gfx* sSheathWithoutSwordDLs[(PLAYER_SHIELD_MAX + 2) * (NUM_DL_FORMS * 2)] = { // FD (2026-07-11): widened 4->6 stride
+Gfx* sSheathWithoutSwordDLs[(PLAYER_SHIELD_MAX + 2) * (NUM_DL_FORMS * 2)] = {
+    // FD (2026-07-11): widened 4->6 stride
     // PLAYER_SHIELD_NONE
-    gLinkAdultSheathNearDL,
-    gLinkChildSheathNearDL,
+    gLinkAdultSheathNearDL, gLinkChildSheathNearDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11): FD has no sheath
-    gLinkAdultSheathFarDL,
-    gLinkChildSheathFarDL,
+    gLinkAdultSheathFarDL, gLinkChildSheathFarDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
     // PLAYER_SHIELD_DEKU
-    gLinkAdultSheathNearDL,
-    gLinkChildDekuShieldAndSheathNearDL,
+    gLinkAdultSheathNearDL, gLinkChildDekuShieldAndSheathNearDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
-    gLinkAdultSheathFarDL,
-    gLinkChildDekuShieldAndSheathFarDL,
+    gLinkAdultSheathFarDL, gLinkChildDekuShieldAndSheathFarDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
     // PLAYER_SHIELD_HYLIAN
-    gLinkAdultHylianShieldAndSheathNearDL,
-    gLinkChildHylianShieldAndSheathNearDL,
+    gLinkAdultHylianShieldAndSheathNearDL, gLinkChildHylianShieldAndSheathNearDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
-    gLinkAdultHylianShieldAndSheathFarDL,
-    gLinkChildHylianShieldAndSheathFarDL,
+    gLinkAdultHylianShieldAndSheathFarDL, gLinkChildHylianShieldAndSheathFarDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
     // PLAYER_SHIELD_MIRROR
-    gLinkAdultMirrorShieldAndSheathNearDL,
-    gLinkChildSheathNearDL,
+    gLinkAdultMirrorShieldAndSheathNearDL, gLinkChildSheathNearDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
-    gLinkAdultMirrorShieldAndSheathFarDL,
-    gLinkChildSheathFarDL,
+    gLinkAdultMirrorShieldAndSheathFarDL, gLinkChildSheathFarDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
     // PLAYER_SHIELD_NONE (child, no sword)
-    NULL,
-    NULL,
+    NULL, NULL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
-    NULL,
-    NULL,
+    NULL, NULL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
     // PLAYER_SHIELD_DEKU (child, no sword)
-    gLinkAdultSheathNearDL,
-    gLinkChildDekuShieldWithMatrixDL,
+    gLinkAdultSheathNearDL, gLinkChildDekuShieldWithMatrixDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
-    gLinkAdultSheathNearDL,
-    gLinkChildDekuShieldWithMatrixDL,
+    gLinkAdultSheathNearDL, gLinkChildDekuShieldWithMatrixDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
 };
 
-Gfx* gPlayerLeftHandBgsDLs[] = { // FD (2026-07-11): widened 4->6 stride + FD-sword sub-block
+Gfx* gPlayerLeftHandBgsDLs[] = {
+    // FD (2026-07-11): widened 4->6 stride + FD-sword sub-block
     // Biggoron Sword
-    gLinkAdultLeftHandHoldingBgsNearDL,
-    gLinkChildLeftHandHoldingMasterSwordDL,
+    gLinkAdultLeftHandHoldingBgsNearDL, gLinkChildLeftHandHoldingMasterSwordDL,
     gLinkFierceDeityLeftHandHoldingSwordDL, // FD (2026-07-11): blade baked in, no separate sword DL
-    gLinkAdultLeftHandHoldingBgsFarDL,
-    gLinkChildLeftHandHoldingMasterSwordDL,
+    gLinkAdultLeftHandHoldingBgsFarDL, gLinkChildLeftHandHoldingMasterSwordDL,
     gLinkFierceDeityLeftHandHoldingSwordDL, // FD (2026-07-11)
     // Broken Giant's Knife
-    gLinkAdultHandHoldingBrokenGiantsKnifeDL,
-    gLinkChildLeftHandHoldingMasterSwordDL,
+    gLinkAdultHandHoldingBrokenGiantsKnifeDL, gLinkChildLeftHandHoldingMasterSwordDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11): FD sword never breaks
-    gLinkAdultHandHoldingBrokenGiantsKnifeFarDL,
-    gLinkChildLeftHandHoldingMasterSwordDL,
+    gLinkAdultHandHoldingBrokenGiantsKnifeFarDL, gLinkChildLeftHandHoldingMasterSwordDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
     // Fierce Deity sword (selected by 3g offset when holding the deity sword). FD-form-only: the
     // adult/child "FD-sword-in-a-human-hand" DLs are absent from object_link_deity.h, so they are NULL;
     // only the deity slot is ever read at linkAge==LINK_AGE_DEITY.
-    gLinkFierceDeityEmptyDL, // FD (2026-07-11): gLinkAdultFierceDeityLeftHandHoldingSwordDL absent
-    gLinkFierceDeityEmptyDL, // FD (2026-07-11): gLinkChildFierceDeityLeftHandHoldingSwordDL absent
+    gLinkFierceDeityEmptyDL,                // FD (2026-07-11): gLinkAdultFierceDeityLeftHandHoldingSwordDL absent
+    gLinkFierceDeityEmptyDL,                // FD (2026-07-11): gLinkChildFierceDeityLeftHandHoldingSwordDL absent
     gLinkFierceDeityLeftHandHoldingSwordDL, // FD (2026-07-11)
-    gLinkFierceDeityEmptyDL, // FD (2026-07-11)
-    gLinkFierceDeityEmptyDL, // FD (2026-07-11)
+    gLinkFierceDeityEmptyDL,                // FD (2026-07-11)
+    gLinkFierceDeityEmptyDL,                // FD (2026-07-11)
     gLinkFierceDeityLeftHandHoldingSwordDL, // FD (2026-07-11)
 };
 
 // FD (2026-07-11): all DL-group arrays below widened adult,child -> adult,child,DEITY (near then far),
 // stride NUM_DL_FORMS (3). FD-form entries per FD_PORT_SPEC.md Group 3b.
 Gfx* gPlayerLeftHandOpenDLs[] = {
-    gLinkAdultLeftHandNearDL,
-    gLinkChildLeftHandNearDL,
+    gLinkAdultLeftHandNearDL,   gLinkChildLeftHandNearDL,
     gLinkFierceDeityLeftHandDL, // FD (2026-07-11)
-    gLinkAdultLeftHandFarDL,
-    gLinkChildLeftHandFarDL,
+    gLinkAdultLeftHandFarDL,    gLinkChildLeftHandFarDL,
     gLinkFierceDeityLeftHandDL, // FD (2026-07-11)
 };
 
 Gfx* gPlayerLeftHandClosedDLs[] = {
-    gLinkAdultLeftHandClosedNearDL,
-    gLinkChildLeftFistNearDL,
+    gLinkAdultLeftHandClosedNearDL, gLinkChildLeftFistNearDL,
     gLinkFierceDeityLeftHandDL, // FD (2026-07-11)
-    gLinkAdultLeftHandClosedFarDL,
-    gLinkChildLeftFistFarDL,
+    gLinkAdultLeftHandClosedFarDL,  gLinkChildLeftFistFarDL,
     gLinkFierceDeityLeftHandDL, // FD (2026-07-11)
 };
 
@@ -353,20 +317,16 @@ Gfx* sPlayerLeftHandSwordDLs[] = {
 };
 
 Gfx* sPlayerRightHandOpenDLs[] = {
-    gLinkAdultRightHandNearDL,
-    gLinkChildRightHandNearDL,
+    gLinkAdultRightHandNearDL,   gLinkChildRightHandNearDL,
     gLinkFierceDeityRightHandDL, // FD (2026-07-11)
-    gLinkAdultRightHandFarDL,
-    gLinkChildRightHandFarDL,
+    gLinkAdultRightHandFarDL,    gLinkChildRightHandFarDL,
     gLinkFierceDeityRightHandDL, // FD (2026-07-11)
 };
 
 Gfx* sPlayerRightHandClosedDLs[] = {
-    gLinkAdultRightHandClosedNearDL,
-    gLinkChildRightHandClosedNearDL,
+    gLinkAdultRightHandClosedNearDL, gLinkChildRightHandClosedNearDL,
     gLinkFierceDeityRightHandDL, // FD (2026-07-11)
-    gLinkAdultRightHandClosedFarDL,
-    gLinkChildRightHandClosedFarDL,
+    gLinkAdultRightHandClosedFarDL,  gLinkChildRightHandClosedFarDL,
     gLinkFierceDeityRightHandDL, // FD (2026-07-11)
 };
 
@@ -389,20 +349,16 @@ Gfx* sSwordAndSheathDLs[] = {
 };
 
 Gfx* sSheathDLs[] = {
-    gLinkAdultSheathNearDL,
-    gLinkChildSheathNearDL,
+    gLinkAdultSheathNearDL,  gLinkChildSheathNearDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11): FD has no sheath
-    gLinkAdultSheathFarDL,
-    gLinkChildSheathFarDL,
+    gLinkAdultSheathFarDL,   gLinkChildSheathFarDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
 };
 
 Gfx* sPlayerWaistDLs[] = {
-    gLinkAdultWaistNearDL,
-    gLinkChildWaistNearDL,
+    gLinkAdultWaistNearDL,   gLinkChildWaistNearDL,
     gLinkFierceDeityWaistDL, // FD (2026-07-11)
-    gLinkAdultWaistFarDL,
-    gLinkChildWaistFarDL,
+    gLinkAdultWaistFarDL,    gLinkChildWaistFarDL,
     gLinkFierceDeityWaistDL, // FD (2026-07-11)
 };
 
@@ -416,17 +372,16 @@ Gfx* sPlayerRightHandBowSlingshotDLs2[] = {
 };
 
 Gfx* sPlayerRightHandOcarinaDLs[] = {
-    gLinkAdultRightHandHoldingOotNearDL,
-    gLinkChildRightHandHoldingFairyOcarinaNearDL,
+    gLinkAdultRightHandHoldingOotNearDL, gLinkChildRightHandHoldingFairyOcarinaNearDL,
     // FD (2026-07-13) SELF-CONTAINED ocarina: the deity slots draw FD's OWN right hand (gLinkFierceDeityRightHandDL,
     // part of the always-loaded FD model, so it has FD's real pale hand texture -- the earlier patched-adult-hand DL
     // rendered adult/peachy skin because it kept adult hand tex/TLUT); the correct ocarina mesh -- Fairy OR OoT,
     // extracted from BASE geometry into fd.o2r -- is drawn on top in Player_PostLimbDrawGameplay based on which
     // ocarina is equipped. So FD holds the right ocarina with his own hand out of the gate.
-    gLinkFierceDeityRightHandDL, // [2] DEITY near -- FD's own hand (correct texture)
-    gLinkAdultRightHandHoldingOotFarDL,        // [3] adult far
+    gLinkFierceDeityRightHandDL,                 // [2] DEITY near -- FD's own hand (correct texture)
+    gLinkAdultRightHandHoldingOotFarDL,          // [3] adult far
     gLinkChildRightHandHoldingFairyOcarinaFarDL, // [4] child far
-    gLinkFierceDeityRightHandDL,  // [5] DEITY far -- FD's own hand (correct texture)
+    gLinkFierceDeityRightHandDL,                 // [5] DEITY far -- FD's own hand (correct texture)
 };
 
 Gfx* sPlayerRightHandOotDLs[] = {
@@ -441,7 +396,7 @@ Gfx* sPlayerRightHandOotDLs[] = {
 Gfx* sPlayerRightHandHookshotDLs[] = {
     gLinkAdultRightHandHoldingHookshotNearDL,
     gLinkChildRightHandNearDL,
-    gLinkFierceDeityEmptyDL, // FD (2026-07-11)
+    gLinkFierceDeityEmptyDL,                  // FD (2026-07-11)
     gLinkAdultRightHandHoldingHookshotNearDL, // The 'far' display list exists but is not used
     gLinkChildRightHandFarDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
@@ -457,20 +412,16 @@ Gfx* sPlayerLeftHandHammerDLs[] = {
 };
 
 Gfx* gPlayerLeftHandBoomerangDLs[] = {
-    gLinkAdultLeftHandNearDL,
-    gLinkChildLeftFistAndBoomerangNearDL,
+    gLinkAdultLeftHandNearDL, gLinkChildLeftFistAndBoomerangNearDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
-    gLinkAdultLeftHandFarDL,
-    gLinkChildLeftFistAndBoomerangFarDL,
+    gLinkAdultLeftHandFarDL,  gLinkChildLeftFistAndBoomerangFarDL,
     gLinkFierceDeityEmptyDL, // FD (2026-07-11)
 };
 
 Gfx* sPlayerLeftHandBottleDLs[] = {
-    gLinkAdultLeftHandOutNearDL,
-    gLinkChildLeftHandUpNearDL,
+    gLinkAdultLeftHandOutNearDL, gLinkChildLeftHandUpNearDL,
     gLinkFierceDeityLeftHandDL, // FD (2026-07-11): FD holds bottle with plain left hand (hold-bottle DL unused)
-    gLinkAdultLeftHandOutNearDL,
-    gLinkChildLeftHandUpNearDL,
+    gLinkAdultLeftHandOutNearDL, gLinkChildLeftHandUpNearDL,
     gLinkFierceDeityLeftHandDL, // FD (2026-07-11)
 };
 
@@ -478,32 +429,27 @@ Gfx* sPlayerLeftHandBottleDLs[] = {
 // so they need one DEITY entry (index 2). FD is never in first-person weapon-aim in the FD-only port;
 // DEITY = copy of adult per FD_PORT_SPEC.md 3c (SOURCE ships NULL here -- see report note).
 Gfx* sFirstPersonLeftForearmDLs[] = {
-    gLinkAdultRightArmOutNearDL,
-    NULL,
+    gLinkAdultRightArmOutNearDL, NULL,
     gLinkAdultRightArmOutNearDL, // FD (2026-07-11): DEITY = adult
 };
 
 Gfx* sFirstPersonLeftHandDLs[] = {
-    gLinkAdultRightHandOutNearDL,
-    NULL,
+    gLinkAdultRightHandOutNearDL, NULL,
     gLinkAdultRightHandOutNearDL, // FD (2026-07-11): DEITY = adult
 };
 
 Gfx* sFirstPersonRightShoulderDLs[] = {
-    gLinkAdultRightShoulderNearDL,
-    gLinkChildRightShoulderNearDL,
+    gLinkAdultRightShoulderNearDL, gLinkChildRightShoulderNearDL,
     gLinkAdultRightShoulderNearDL, // FD (2026-07-11): DEITY = adult
 };
 
 Gfx* sFirstPersonForearmDLs[] = {
-    gLinkAdultLeftArmOutNearDL,
-    NULL,
+    gLinkAdultLeftArmOutNearDL, NULL,
     gLinkAdultLeftArmOutNearDL, // FD (2026-07-11): DEITY = adult
 };
 
 Gfx* sFirstPersonRightHandHoldingWeaponDLs[] = {
-    gLinkAdultRightHandHoldingBowFirstPersonDL,
-    gLinkChildRightArmStretchedSlingshotDL,
+    gLinkAdultRightHandHoldingBowFirstPersonDL, gLinkChildRightArmStretchedSlingshotDL,
     gLinkAdultRightHandHoldingBowFirstPersonDL, // FD (2026-07-11): DEITY = adult
 };
 
@@ -1112,7 +1058,8 @@ u8 sEyeMouthIndexes[][2] = {
 
 #if defined(MODDING) || defined(_MSC_VER) || defined(__GNUC__)
 // TODO: Formatting
-void* sEyeTextures[3][8] = { // FD (2026-07-11): +DEITY row
+void* sEyeTextures[3][8] = {
+    // FD (2026-07-11): +DEITY row
     { gLinkAdultEyesOpenTex, gLinkAdultEyesHalfTex, gLinkAdultEyesClosedfTex, gLinkAdultEyesRollLeftTex,
       gLinkAdultEyesRollRightTex, gLinkAdultEyesShockTex, gLinkAdultEyesUnk1Tex, gLinkAdultEyesUnk2Tex },
     { gLinkChildEyesOpenTex, gLinkChildEyesHalfTex, gLinkChildEyesClosedfTex, gLinkChildEyesRollLeftTex,
@@ -1129,7 +1076,8 @@ void* sEyeTextures[] = {
 #endif
 
 #if defined(MODDING) || defined(_MSC_VER) || defined(__GNUC__)
-void* sMouthTextures[3][4] = { // FD (2026-07-11): +DEITY row
+void* sMouthTextures[3][4] = {
+    // FD (2026-07-11): +DEITY row
     {
         gLinkAdultMouth1Tex,
         gLinkAdultMouth2Tex,
@@ -1292,15 +1240,13 @@ Vec3f sZeroVec = { 0.0f, 0.0f, 0.0f };
 
 // FD (2026-07-11): leg-IK tables widened +DEITY (= adult values; FD is adult-proportioned).
 Vec3f D_80126038[] = {
-    { 1304.0f, 0.0f, 0.0f },
-    { 695.0f, 0.0f, 0.0f },
-    { 1304.0f, 0.0f, 0.0f }, // FD (2026-07-11): deity = adult
+    { 1304.0f, 0.0f, 0.0f }, { 695.0f, 0.0f, 0.0f }, { 1304.0f, 0.0f, 0.0f }, // FD (2026-07-11): deity = adult
 };
 
-f32 D_80126050[] = { 1265.0f, 826.0f, 1265.0f }; // FD (2026-07-11): deity = adult
-f32 D_80126058[] = { SQ(13.04f), SQ(6.95f), SQ(13.04f) }; // FD (2026-07-11): deity = adult
+f32 D_80126050[] = { 1265.0f, 826.0f, 1265.0f };            // FD (2026-07-11): deity = adult
+f32 D_80126058[] = { SQ(13.04f), SQ(6.95f), SQ(13.04f) };   // FD (2026-07-11): deity = adult
 f32 D_80126060[] = { 10.019104f, -19.925102f, 10.019104f }; // FD (2026-07-11): deity = adult
-f32 D_80126068[] = { 5.0f, 3.0f, 5.0f }; // FD (2026-07-11): deity = adult
+f32 D_80126068[] = { 5.0f, 3.0f, 5.0f };                    // FD (2026-07-11): deity = adult
 
 Vec3f D_80126070 = { 0.0f, -300.0f, 0.0f };
 
@@ -1535,8 +1481,7 @@ s32 Player_OverrideLimbDrawGameplayDefault(PlayState* play, s32 limbIndex, Gfx**
         if (limbIndex == PLAYER_LIMB_L_HAND) {
             Gfx** dLists = this->leftHandDLists;
 
-            if ((sLeftHandType == PLAYER_MODELTYPE_LH_BGS) &&
-                (this->lastItem == ITEM_SWORD_DEITY || LINK_IS_DEITY)) {
+            if ((sLeftHandType == PLAYER_MODELTYPE_LH_BGS) && (this->lastItem == ITEM_SWORD_DEITY || LINK_IS_DEITY)) {
                 dLists += ((NUM_DL_FORMS * 2) * 2); // FD (2026-07-11): select FD-sword sub-block
             } else if ((sLeftHandType == PLAYER_MODELTYPE_LH_BGS) && (gSaveContext.swordHealth <= 0.0f)) {
                 dLists += (NUM_DL_FORMS * 2); // FD (2026-07-11): was 4 (broken-knife sub-block)
@@ -1905,8 +1850,7 @@ f32 sSwordTypes[] = {
     TRAIL_TYPE_BIGGORON_SWORD, TRAIL_TYPE_REST,         TRAIL_TYPE_HAMMER,
 };
 
-Gfx* sBottleDLists[] = { gLinkAdultBottleDL, gLinkChildBottleDL,
-                         gLinkFierceDeityBottleDL }; // FD (2026-07-11): +DEITY
+Gfx* sBottleDLists[] = { gLinkAdultBottleDL, gLinkChildBottleDL, gLinkFierceDeityBottleDL }; // FD (2026-07-11): +DEITY
 
 Color_RGB8 sBottleColors[] = {
     { 255, 255, 255 }, { 80, 80, 255 },   { 255, 100, 255 }, { 0, 0, 255 }, { 255, 0, 255 },
@@ -1943,9 +1887,7 @@ Vec3f sSheathLimbModelShieldOnBackPos = { 630.0f, 100.0f, -30.0f };
 Vec3s sSheathLimbModelShieldOnBackZyxRot = { 0, 0, 0x7FFF };
 
 Vec3f sLeftRightFootLimbModelFootPos[] = {
-    { 200.0f, 300.0f, 0.0f },
-    { 200.0f, 200.0f, 0.0f },
-    { 200.0f, 300.0f, 0.0f }, // FD (2026-07-11): deity
+    { 200.0f, 300.0f, 0.0f }, { 200.0f, 200.0f, 0.0f }, { 200.0f, 300.0f, 0.0f }, // FD (2026-07-11): deity
 };
 
 // FD (2026-07-11): Fierce Deity sword-beam gate (RE z_player_lib.c:1712 Player_CanUseSwordBeams +
@@ -2012,9 +1954,8 @@ static void Player_DrawMaskInHand(PlayState* play, Player* this) {
     // Link's face texture and never appears in-hand" bug. RE keeps held [8,12) and on-face [12,inf) mutually
     // EXCLUSIVE (fd_build z_player_lib.c:675 vs :2212) so exactly one mask draws per frame. Revert shows it whole.
     donFrame = this->skelAnime.curFrame;
-    if (removing ||
-        (LINK_IS_HUMAN && Player_AnimIsByName(&this->skelAnime, gPlayerAnim_cl_setmask) &&
-         (donFrame >= 8.0f) && (donFrame < 12.0f))) {
+    if (removing || (LINK_IS_HUMAN && Player_AnimIsByName(&this->skelAnime, gPlayerAnim_cl_setmask) &&
+                     (donFrame >= 8.0f) && (donFrame < 12.0f))) {
         OPEN_DISPS(play->state.gfxCtx);
         // FD (2026-07-12) ★ROOT-CAUSE FIX: set up the standard opaque render state, exactly like the WORKING
         // get-item mask draw (FierceDeity_DrawGiMask). Without it, the mask DL inherits the skeleton's skin
@@ -2091,8 +2032,7 @@ void Player_PostLimbDrawGameplay(PlayState* play, s32 limbIndex, Gfx** dList, Ve
     // (Fairy vs OoT, extracted from base geometry into fd.o2r) on top, at the hand's limb matrix -- exactly where the
     // base ocarina mesh is authored. Works without the alt-asset customequipment pack, unlike adult/child. Only the
     // near LOD's slot is the ocarina hand; the far slot is the same bare hand, so this draws for both.
-    if ((limbIndex == PLAYER_LIMB_R_HAND) && LINK_IS_DEITY &&
-        (this->rightHandType == PLAYER_MODELTYPE_RH_OCARINA)) {
+    if ((limbIndex == PLAYER_LIMB_R_HAND) && LINK_IS_DEITY && (this->rightHandType == PLAYER_MODELTYPE_RH_OCARINA)) {
         OPEN_DISPS(play->state.gfxCtx);
         gSPDisplayList(POLY_OPA_DISP++, (INV_CONTENT(ITEM_OCARINA_FAIRY) == ITEM_OCARINA_FAIRY)
                                             ? (Gfx*)gFdFairyOcarinaDL
@@ -2343,7 +2283,8 @@ void Player_PostLimbDrawGameplay(PlayState* play, s32 limbIndex, Gfx** dList, Ve
                 // cycle type itself (MM ran it inside a 2-cycle draw). Force 2-cycle so the combiner is well-formed.
                 gDPPipeSync(POLY_XLU_DISP++);
                 gDPSetCycleType(POLY_XLU_DISP++, G_CYC_2CYCLE);
-                // Bind seg 0x0B to the animated two-tex cloud scroll (RE sMaskEffectScroll {{-1,0,16,16},{1,-2,16,16}}).
+                // Bind seg 0x0B to the animated two-tex cloud scroll (RE sMaskEffectScroll
+                // {{-1,0,16,16},{1,-2,16,16}}).
                 gSPSegment(POLY_XLU_DISP++, 0x0B,
                            Gfx_TwoTexScrollEx(play->state.gfxCtx, 0, (0 - play->gameplayFrames) % 128, 0, 16, 16, 1,
                                               (play->gameplayFrames * 1) % 128, (play->gameplayFrames * 2) % 128, 16,

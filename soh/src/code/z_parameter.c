@@ -1411,10 +1411,11 @@ void func_80083108(PlayState* play) {
     //
     // #1 FIX: do NOT flag sp28 for these. The vanilla button loops above re-ENABLE FD-unusable buttons every
     // frame (they can't know about the deity restriction) and flag sp28 on the disabled->enabled flip; this
-    // loop re-disables them. That perpetual oscillation kept sp28=1 every frame -> Interface_ChangeHudVisibilityMode(50) +
-    // hudVisibilityMode=0 re-triggered the HUD alpha transition continuously -> the WHOLE HUD faded transparent (B and
-    // the FD mask included). Because the per-button gray is driven purely by buttonStatus (not the global
-    // alpha), we suppress the FD-induced sp28 so only the individual unusable C-buttons dim, HUD stays solid.
+    // loop re-disables them. That perpetual oscillation kept sp28=1 every frame ->
+    // Interface_ChangeHudVisibilityMode(50) + hudVisibilityMode=0 re-triggered the HUD alpha transition continuously ->
+    // the WHOLE HUD faded transparent (B and the FD mask included). Because the per-button gray is driven purely by
+    // buttonStatus (not the global alpha), we suppress the FD-induced sp28 so only the individual unusable C-buttons
+    // dim, HUD stays solid.
     if (LINK_IS_DEITY) {
         for (i = 1; i < ARRAY_COUNT(gSaveContext.equips.buttonItems); i++) {
             u8 btnItem = gSaveContext.equips.buttonItems[i];
@@ -1435,7 +1436,8 @@ void func_80083108(PlayState* play) {
     // ★HUD-TRANSPARENCY FIX: when we force the mask DISABLED, the vanilla button loops ABOVE re-ENABLE this
     // custom item every frame (0x9F matches no restriction range, so the `restrictions.all==0` default-enable
     // loop sets it BTN_ENABLED) and flag sp28 on the disabled->enabled flip. That perpetual oscillation kept
-    // sp28=1 every frame -> Interface_ChangeHudVisibilityMode + hudVisibilityMode=0 re-triggered the HUD alpha transition continuously
+    // sp28=1 every frame -> Interface_ChangeHudVisibilityMode + hudVisibilityMode=0 re-triggered the HUD alpha
+    // transition continuously
     // -> the WHOLE HUD faded transparent (the reported bug: adult Link, FD mask on C-Right, ToT). The per-button
     // gray is driven purely by buttonStatus (func_80082644, read at HUD-draw = after this), so we suppress the
     // FD-mask-oscillation sp28 -- only that C-button dims, the HUD stays solid. (Same fix as the LINK_IS_DEITY
@@ -4380,7 +4382,8 @@ void Interface_DrawItemButtons(PlayState* play) {
             // C-Up Button Texture, Color & Label (Navi Text)
             gDPPipeSync(OVERLAY_DISP++);
 
-            if ((gSaveContext.hudVisibilityMode == 1) || (gSaveContext.hudVisibilityMode == 2) || (gSaveContext.hudVisibilityMode == 5)) {
+            if ((gSaveContext.hudVisibilityMode == 1) || (gSaveContext.hudVisibilityMode == 2) ||
+                (gSaveContext.hudVisibilityMode == 5)) {
                 temp = 0;
             } else if ((player->stateFlags1 & PLAYER_STATE1_CLIMBING_LADDER) ||
                        (Player_GetEnvironmentalHazard(play) == 4) || (player->stateFlags2 & PLAYER_STATE2_CRAWLING)) {

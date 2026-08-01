@@ -9,8 +9,10 @@ extern PlayState* gPlayState;
 
 void Player_UseItem(PlayState* play, Player* player, s32 item);
 void Player_Draw(Actor* actor, PlayState* play);
-s32 Object_Spawn(ObjectContext* objectCtx, s16 objectId); // FD (aegiker RE->SoH port): not in functions.h; FD object residency
-void FierceDeity_DrawGiMask(PlayState* play, GetItemEntry* getItemEntry); // FD (aegiker RE->SoH port): custom FD-mask get-item draw
+s32 Object_Spawn(ObjectContext* objectCtx,
+                 s16 objectId); // FD (aegiker RE->SoH port): not in functions.h; FD object residency
+void FierceDeity_DrawGiMask(PlayState* play,
+                            GetItemEntry* getItemEntry); // FD (aegiker RE->SoH port): custom FD-mask get-item draw
 }
 
 static DamageTable DummyPlayerDamageTable = {
@@ -197,8 +199,7 @@ void DummyPlayer_Update(Actor* actor, PlayState* play) {
         // positional N64 substitutes at the SAME frames the local timeline uses. A beat fires once when the synced
         // curFrame CROSSES its threshold; on a fresh anim (id changed) prev resets to -1 so an early beat still lands.
         {
-            f32 fPrev = (client.fdTransformAnimPrev == client.fdTransformAnim) ? client.fdTransformCurFramePrev
-                                                                              : -1.0f;
+            f32 fPrev = (client.fdTransformAnimPrev == client.fdTransformAnim) ? client.fdTransformCurFramePrev : -1.0f;
             f32 fCur = client.fdTransformCurFrame;
 #define FD_XFORM_BEAT(T) ((fPrev < (T)) && (fCur >= (T)))
             if (client.fdTransformAnim == 1) { // cl_setmask (put-on the FD mask)

@@ -2845,7 +2845,6 @@ static s16 D_8094A90C[] = {
     0, 1, 2, 2, 2, 2, 2, 2, 1,
 };
 
-
 // FD (2026-07-12) BOSS PARITY (aegiker): a Fierce Deity great sword beam substitutes for the reflected-magic hit in
 // Twinrova's fight -- for the individual sisters (Koume/Kotake) it triggers the same HitByBeam reaction the ping-pong
 // beam duel does, and for merged Twinrova it deals the mirror-shield-reflection damage. The aegiker composite carries
@@ -2906,7 +2905,6 @@ void BossTw_TwinrovaCheckForSwordbeam(BossTw* this, PlayState* play) {
         }
     }
 }
-
 
 void BossTw_Update(Actor* thisx, PlayState* play) {
     BossTw* this = (BossTw*)thisx;

@@ -66,7 +66,9 @@ class Extractor {
     void GetRoms(std::vector<std::string>& roms);
     bool RunFileStandalone(std::string file);
     // FD (2026-07-16): put this Extractor into Majora's Mask mode (for fd.o2r generation).
-    void SetMM(bool isMM) { mIsMM = isMM; }
+    void SetMM(bool isMM) {
+        mIsMM = isMM;
+    }
     // FD (2026-07-16): run ZAPD against the (already-validated) MM ROM using the curated MM XML subset,
     // producing a full temp extract archive. Returns its absolute path ("" on failure); caller deletes it.
     std::string ExtractCuratedToTemp(std::string installPath, std::atomic<size_t>* extractCount,

@@ -79,13 +79,13 @@ void GiveFierceDeityMask(void) {
     // The GET_ITEM object/gid/gi still reference a valid vanilla mask so the get-item FLOW gates pass
     // (objectId != INVALID, getItemId != NONE), but drawFunc below OVERRIDES the held model with the
     // real Fierce Deity mask -- so the Goron model is never actually drawn.
-    GetItemEntry fdMask = GET_ITEM(ITEM_MASK_DEITY,       // itemId  -> what Item_Give() receives
-                                   OBJECT_GI_GOLONMASK,   // objectId (flow gate only; model overridden)
-                                   GID_MASK_GORON,        // drawId  (flow gate only; model overridden)
-                                   FD_MASK_TEXT_ID,       // textId  (custom acquisition message)
-                                   0x80,                  // field   (matches the vanilla masks)
+    GetItemEntry fdMask = GET_ITEM(ITEM_MASK_DEITY,     // itemId  -> what Item_Give() receives
+                                   OBJECT_GI_GOLONMASK, // objectId (flow gate only; model overridden)
+                                   GID_MASK_GORON,      // drawId  (flow gate only; model overridden)
+                                   FD_MASK_TEXT_ID,     // textId  (custom acquisition message)
+                                   0x80,                // field   (matches the vanilla masks)
                                    CHEST_ANIM_LONG, ITEM_CATEGORY_MAJOR, MOD_NONE,
-                                   GI_MASK_GORON);         // getItemId (must be a valid GI for the draw)
+                                   GI_MASK_GORON); // getItemId (must be a valid GI for the draw)
     fdMask.drawFunc = FierceDeity_DrawGiMask; // FD (2026-07-11): draw the real FD mask model, not the Goron fallback
 
     // Show the overhead-hold acquisition animation + textbox + fanfare. Item_Give() (called by the

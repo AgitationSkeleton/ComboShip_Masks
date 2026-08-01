@@ -516,9 +516,9 @@ void Play_Init(GameState* thisx) {
         gSaveContext.sceneLayer = (Flags_GetEventChkInf(EVENTCHKINF_USED_FOREST_TEMPLE_BLUE_WARP)) ? 3 : 2;
     }
 
-    Play_SpawnScene(
-        play, gEntranceTable[((void)0, gSaveContext.entranceIndex) + ((void)0, gSaveContext.sceneLayer)].scene,
-        gEntranceTable[((void)0, gSaveContext.sceneLayer) + ((void)0, gSaveContext.entranceIndex)].spawn);
+    Play_SpawnScene(play,
+                    gEntranceTable[((void)0, gSaveContext.entranceIndex) + ((void)0, gSaveContext.sceneLayer)].scene,
+                    gEntranceTable[((void)0, gSaveContext.sceneLayer) + ((void)0, gSaveContext.entranceIndex)].spawn);
 
     osSyncPrintf("\nSCENE_NO=%d COUNTER=%d\n", ((void)0, gSaveContext.entranceIndex), gSaveContext.sceneLayer);
 
@@ -1481,8 +1481,8 @@ void Play_Draw(PlayState* play) {
             play->ageChangeFadeAlpha = CLAMP(play->ageChangeFadeAlpha, 0, 255 + TRANSFORM_EXTRA_FADE_FRAMES);
             if (play->ageChangeFadeAlpha != 0) {
                 gDPPipeSync(gfxP++);
-                gSPClearGeometryMode(gfxP++, G_ZBUFFER | G_SHADE | G_CULL_BOTH | G_FOG | G_LIGHTING |
-                                                 G_TEXTURE_GEN | G_TEXTURE_GEN_LINEAR | G_LOD | G_SHADING_SMOOTH);
+                gSPClearGeometryMode(gfxP++, G_ZBUFFER | G_SHADE | G_CULL_BOTH | G_FOG | G_LIGHTING | G_TEXTURE_GEN |
+                                                 G_TEXTURE_GEN_LINEAR | G_LOD | G_SHADING_SMOOTH);
                 gDPSetOtherMode(gfxP++,
                                 G_AD_DISABLE | G_CD_MAGICSQ | G_CK_NONE | G_TC_FILT | G_TF_BILERP | G_TT_NONE |
                                     G_TL_TILE | G_TD_CLAMP | G_TP_NONE | G_CYC_1CYCLE | G_PM_1PRIMITIVE,

@@ -10,9 +10,9 @@
 #include <vector>
 #include <chrono>
 #include <optional>
-#include <mutex>            // FD (2026-07-12): FdAudio one-shot mixer synchronization
-#include <unordered_map>    // FD (2026-07-12): FdAudio PCM cache
-#include <dr_wav.h>         // FD (2026-07-12): custom-WAV one-shot decode for FdAudio_PlayOneShot
+#include <mutex>         // FD (2026-07-12): FdAudio one-shot mixer synchronization
+#include <unordered_map> // FD (2026-07-12): FdAudio PCM cache
+#include <dr_wav.h>      // FD (2026-07-12): custom-WAV one-shot decode for FdAudio_PlayOneShot
 #include <imgui.h>
 
 #include "ResourceManagerHelpers.h"
@@ -1135,7 +1135,6 @@ int AudioPlayer_Buffered(void);
 extern "C" int AudioPlayer_GetDesiredBuffered(void);
 std::unordered_map<std::string, ExtensionEntry> ExtensionCache;
 
-
 // FD (2026-07-12) ★ARBITRARY-WAV ONE-SHOT PLAYER (the definitive audio fix). The FD custom transform/fanfare sounds
 // are streamed N64 sequences that LOAD (ducking the BGM) but stay SILENT through the seq/soundfont path, no matter
 // the player or SEQ_MODE. Bypass the entire N64 audio system: decode the source WAVs with drwav and MIX them straight
@@ -1375,7 +1374,6 @@ static void FdAudio_Mix(int16_t* buf, size_t frames) {
         }
     }
 }
-
 
 void OTRAudio_Thread() {
 #define SAMPLES_HIGH 560
@@ -4016,10 +4014,18 @@ static std::set<RandomizerCheck> Combo_ParseExcludedLocations() {
 static void Combo_DisableUnsupportedEntranceShuffle() {
     auto ctx = OTRGlobals::Instance->gRandoContext;
     static const RandomizerSettingKey kEntranceKeys[] = {
-        RSK_SHUFFLE_ENTRANCES,           RSK_SHUFFLE_DUNGEON_ENTRANCES,         RSK_SHUFFLE_BOSS_ENTRANCES,
-        RSK_SHUFFLE_GANONS_TOWER_ENTRANCE, RSK_SHUFFLE_OVERWORLD_ENTRANCES,     RSK_SHUFFLE_INTERIOR_ENTRANCES,
-        RSK_SHUFFLE_THIEVES_HIDEOUT_ENTRANCES, RSK_SHUFFLE_GROTTO_ENTRANCES,    RSK_SHUFFLE_OWL_DROPS,
-        RSK_SHUFFLE_WARP_SONGS,          RSK_SHUFFLE_OVERWORLD_SPAWNS,          RSK_MIXED_ENTRANCE_POOLS,
+        RSK_SHUFFLE_ENTRANCES,
+        RSK_SHUFFLE_DUNGEON_ENTRANCES,
+        RSK_SHUFFLE_BOSS_ENTRANCES,
+        RSK_SHUFFLE_GANONS_TOWER_ENTRANCE,
+        RSK_SHUFFLE_OVERWORLD_ENTRANCES,
+        RSK_SHUFFLE_INTERIOR_ENTRANCES,
+        RSK_SHUFFLE_THIEVES_HIDEOUT_ENTRANCES,
+        RSK_SHUFFLE_GROTTO_ENTRANCES,
+        RSK_SHUFFLE_OWL_DROPS,
+        RSK_SHUFFLE_WARP_SONGS,
+        RSK_SHUFFLE_OVERWORLD_SPAWNS,
+        RSK_MIXED_ENTRANCE_POOLS,
         RSK_DECOUPLED_ENTRANCES,
     };
     bool anyOn = false;

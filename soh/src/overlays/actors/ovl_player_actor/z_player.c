@@ -159,10 +159,10 @@ s32 func_80835B60(Player* this, PlayState* play); // Boomerang active
 s32 func_80835C08(Player* this, PlayState* play);
 
 void Player_UseItem(PlayState* play, Player* this, s32 item);
-void Player_ChangeAge(Player* this, PlayState* play, s16 age); // FD (2026-07-11) 4g
+void Player_ChangeAge(Player* this, PlayState* play, s16 age);                   // FD (2026-07-11) 4g
 void Player_SetupMaskTransformation(PlayState* play, Player* this, u8 nextForm); // FD (2026-07-11) Task 1
-void Player_MaskTransformation(Player* this, PlayState* play);                    // FD (2026-07-11) Task 1 (action fn)
-void func_80839FFC(Player* this, PlayState* play);                               // FD (2026-07-11) Task 1 (fwd; defined below)
+void Player_MaskTransformation(Player* this, PlayState* play);                   // FD (2026-07-11) Task 1 (action fn)
+void func_80839FFC(Player* this, PlayState* play); // FD (2026-07-11) Task 1 (fwd; defined below)
 void func_80839F90(Player* this, PlayState* play);
 s32 func_8083C61C(PlayState* play, Player* this);
 void Player_StartMode_Idle(PlayState* play, Player* this);
@@ -535,7 +535,8 @@ static PlayerAgeProperties sAgeProperties[] = {
         { &gPlayerAnim_clink_normal_climb_endAL, &gPlayerAnim_clink_normal_climb_endAR }, // unk_C4
         { &gPlayerAnim_clink_normal_climb_endBR, &gPlayerAnim_clink_normal_climb_endBL }, // unk_CC
     },
-    { // FD (2026-07-11) fierce deity — ported from SOURCE z_player.c:496-547 (climb/demo anims = adult's)
+    {
+        // FD (2026-07-11) fierce deity — ported from SOURCE z_player.c:496-547 (climb/demo anims = adult's)
         84.0f,            // ceilingCheckHeight
         90.0f,            // unk_04
         1.5f,             // unk_08
@@ -3515,9 +3516,9 @@ void Player_DestroyHookshot(Player* this) {
 // API resolves them via ResourceMgr_LoadAnimByName, and skelAnime.animation keeps the unresolved path pointer
 // (so identity compares below use the raw symbol).
 static LinkAnimationHeader* sMaskAnims[LINK_AGE_MAX] = {
-    (LinkAnimationHeader*)gPlayerAnim_cl_setmask,       // LINK_AGE_ADULT: don FD mask
-    (LinkAnimationHeader*)gPlayerAnim_cl_setmask,       // LINK_AGE_CHILD: don FD mask
-    (LinkAnimationHeader*)gPlayerAnim_pz_maskoffstart,  // LINK_AGE_DEITY: take FD mask off (revert)
+    (LinkAnimationHeader*)gPlayerAnim_cl_setmask,      // LINK_AGE_ADULT: don FD mask
+    (LinkAnimationHeader*)gPlayerAnim_cl_setmask,      // LINK_AGE_CHILD: don FD mask
+    (LinkAnimationHeader*)gPlayerAnim_pz_maskoffstart, // LINK_AGE_DEITY: take FD mask off (revert)
 };
 
 // FD: MM's ONEPOINTDEMO_TRANSFORM_MASK_HUMAN/FORM (1040/1041) and their CAM_SET_MASK_TRANSFORMATION0/1 camera
@@ -3648,8 +3649,8 @@ static void Player_TranslateAndRotateY(Player* this, Vec3f* translation, Vec3f* 
 // RE func_80854CD0 (~2370): three parallel 3-component color lerps. For each of out{A,B,C}[i]:
 //   out = (s32)((first - second) * t) + second - bias
 static void Player_InterpolateTransformColors(f32 t, s16* outA, u8* firstA, u8* secondA, u8* biasA, s16* outB,
-                                              u8* firstB, u8* secondB, u8* biasB, s16* outC, u8* firstC,
-                                              u8* secondC, u8* biasC) {
+                                              u8* firstB, u8* secondB, u8* biasB, s16* outC, u8* firstC, u8* secondC,
+                                              u8* biasC) {
     s32 i;
 
     for (i = 0; i < 3; i++) {
@@ -3800,7 +3801,7 @@ void Player_UpdateTransformLights(PlayState* play, Player* this, f32 colorParam,
 static f32 sTransformCamRollSign = 1.0f;
 
 // deg (f32) -> binang; matches MM's CAM_DEG_TO_BINANG(deg)/Math_SinF(DEG_TO_RAD(deg)) pairing (0x10000/360).
-#define FD_XFORM_DEG_TO_BINANG(deg) ((s16)((deg) * 182.04444f))
+#define FD_XFORM_DEG_TO_BINANG(deg) ((s16)((deg)*182.04444f))
 
 // FD (2026-07-11) Task 1 (CAMERA): per-frame manual framing of the transform subcamera, FAITHFUL to the two MM
 // camera functions (fd_build z_camera.c, authoritative):
@@ -3875,7 +3876,7 @@ static void Player_DriveTransformSubCam(PlayState* play, Player* this) {
             r = 30.0f;
             pitch = 0;
             fov = 80.0f;
-        } else { // state2: zoom OUT r 30->80 while rolling, fov 80 (z_camera.c:6735-6756)
+        } else {                          // state2: zoom OUT r 30->80 while rolling, fov 80 (z_camera.c:6735-6756)
             f32 timer = 46.0f - (t - 18); // MM rwData->timer: 46 -> 0
             p = (t - 18) / 46.0f;
             if (p > 1.0f) {
@@ -4054,8 +4055,7 @@ void Player_UpdateTransformationAnim(PlayState* play, Player* this) {
     if (sFdSettling) {
         return;
     }
-    if (LinkAnimation_Update(play, &this->skelAnime) &&
-        (this->skelAnime.animation == (void*)gPlayerAnim_cl_setmask)) {
+    if (LinkAnimation_Update(play, &this->skelAnime) && (this->skelAnime.animation == (void*)gPlayerAnim_cl_setmask)) {
         // cl_setmask finished -> hold on the mask-on-end loop (RE func_808322A4).
         Player_AnimPlayLoopAdjusted(play, this, (LinkAnimationHeader*)gPlayerAnim_cl_setmaskend);
     } else if ((this->skelAnime.animation == (void*)gPlayerAnim_cl_setmask) ||
@@ -4089,9 +4089,10 @@ void Player_UpdateTransformationAnim(PlayState* play, Player* this) {
                                           (gSaveContext.linkAge == LINK_AGE_CHILD) ? FD_TSEQ_CHILD : FD_TSEQ_ADULT,
                                           sTransformScreamSfx[gSaveContext.linkAge]);
             }
-            // FD (2026-07-13): put-on frame 4 is only the SUBTLE mask-attach click (RE D_8085D8F0 NA_SE_PL_CHANGE_ARMS).
-            // The prominent MM mask sample (0x1850 = our Mask_Attach.wav) is the mask-BREAK at frame 20, NOT here --
-            // firing the full WAV at frame 4 made the transform sound start too early. Keep frame 4 the quiet click.
+            // FD (2026-07-13): put-on frame 4 is only the SUBTLE mask-attach click (RE D_8085D8F0
+            // NA_SE_PL_CHANGE_ARMS). The prominent MM mask sample (0x1850 = our Mask_Attach.wav) is the mask-BREAK at
+            // frame 20, NOT here -- firing the full WAV at frame 4 made the transform sound start too early. Keep frame
+            // 4 the quiet click.
             if (LinkAnimation_OnFrame(&this->skelAnime, 4.0f)) {
                 Player_PlaySfx(this, NA_SE_PL_CHANGE_ARMS);
             }
@@ -4186,9 +4187,8 @@ void Player_MaskTransformation(Player* this, PlayState* play) {
             // Transform-to-form (no tail) OR revert pull-off finished: hand off to the idle WAIT anim from a clean
             // full-body pose (preserves the bug-4 spasm fix -- still ends on WAIT before func_80839FFC) and fully
             // clear the transform state.
-            LinkAnimation_Change(play, &this->skelAnime,
-                                 GET_PLAYER_ANIM(PLAYER_ANIMGROUP_wait, this->modelAnimType), 1.0f, 0.0f, 0.0f,
-                                 ANIMMODE_LOOP, -6.0f);
+            LinkAnimation_Change(play, &this->skelAnime, GET_PLAYER_ANIM(PLAYER_ANIMGROUP_wait, this->modelAnimType),
+                                 1.0f, 0.0f, 0.0f, ANIMMODE_LOOP, -6.0f);
             this->stateFlags1 &= ~(PLAYER_STATE1_IN_ITEM_CS | PLAYER_STATE1_IN_CUTSCENE);
             this->stateFlags3 &= ~PLAYER_STATE3_TRANSFORMATION_MASK;
             Player_EndMaskCutscene(play, this, sFormCutsceneIDs[this->transformPreviousForm]);
@@ -4227,7 +4227,8 @@ void Player_MaskTransformation(Player* this, PlayState* play) {
             Math_StepToF(&this->transformMatrixModifiers[4], 1.0f, sMaskTransformLightSteps[0].rate / 100.0f);
         } else if (this->transformEventTimer1 < sMaskTransformLightSteps[0].endFrame) {
             if (this->transformEventTimer1 == sMaskTransformLightSteps[0].midFrame) {
-                Sfx_PlaySfxCentered(NA_SE_EV_LIGHTNING); // FD (2026-07-11): func_800788CC->Sfx_PlaySfxCentered, no _HARD
+                Sfx_PlaySfxCentered(
+                    NA_SE_EV_LIGHTNING); // FD (2026-07-11): func_800788CC->Sfx_PlaySfxCentered, no _HARD
             }
             Math_StepToF(&this->transformMatrixModifiers[4], 2.0f, 0.5f);
         } else {
@@ -4503,7 +4504,9 @@ void Player_UseItem(PlayState* play, Player* this, s32 item) {
                         // Revert: transform back to the REAL prior age (not always adult). ALWAYS allowed,
                         // regardless of zone, so the player can never get stuck as Fierce Deity.
                         nextForm = gSaveContext.ship.fierceDeityPreviousForm;
-                        if (nextForm > LINK_AGE_CHILD) { nextForm = LINK_AGE_ADULT; } // safety clamp
+                        if (nextForm > LINK_AGE_CHILD) {
+                            nextForm = LINK_AGE_ADULT;
+                        } // safety clamp
                     } else {
                         // FD (2026-07-12) #C: only transform INTO Fierce Deity inside a boss lair / fishing hole
                         // (or with the FdUsableAnywhere cheat). Out of zone -> error tone + abort (the grayed
@@ -6492,10 +6495,10 @@ s32 Player_ActionHandler_1(Player* this, PlayState* play) {
                 // (doorA_free/doorB_free), matching the adult age-properties the fix applies in Player_UpdateCommon.
                 // FD (2026-07-13): always on -- it looks correct with no downside, so the toggle was retired.
                 s32 fdDoorAsAdult = (gSaveContext.linkAge == LINK_AGE_DEITY)
-                                    /* && CVarGetInteger(CVAR_ENHANCEMENT("TransformationMasks.DoorScaleFix"), 1) */;
-                door->animStyle =
-                    (doorDirection < 0.0f) ? ((LINK_IS_ADULT || fdDoorAsAdult) ? KNOB_ANIM_ADULT_L : KNOB_ANIM_CHILD_L)
-                                           : ((LINK_IS_ADULT || fdDoorAsAdult) ? KNOB_ANIM_ADULT_R : KNOB_ANIM_CHILD_R);
+                    /* && CVarGetInteger(CVAR_ENHANCEMENT("TransformationMasks.DoorScaleFix"), 1) */;
+                door->animStyle = (doorDirection < 0.0f)
+                                      ? ((LINK_IS_ADULT || fdDoorAsAdult) ? KNOB_ANIM_ADULT_L : KNOB_ANIM_CHILD_L)
+                                      : ((LINK_IS_ADULT || fdDoorAsAdult) ? KNOB_ANIM_ADULT_R : KNOB_ANIM_CHILD_R);
 
                 if (door->animStyle == KNOB_ANIM_ADULT_L) {
                     sp5C = GET_PLAYER_ANIM(PLAYER_ANIMGROUP_doorA_free, this->modelAnimType);
@@ -7730,9 +7733,8 @@ s32 Player_ActionHandler_8(Player* this, PlayState* play) {
         // spin-charge GLOW + magic drain is suppressed separately by the !LINK_IS_DEITY gate around the
         // charge-glow En_M_Thunder spawn in func_80837704 (z_player.c:5153) -- that alone gives MM parity
         // (FD charges/spins, no glow, no magic cost). So the handler-entry gate is removed to match the RE.
-        if (!(this->stateFlags1 & PLAYER_STATE1_SHIELDING) &&
-            (Player_GetMeleeWeaponHeld(this) != 0) && (this->unk_844 == 1) &&
-            (this->heldItemAction != PLAYER_IA_DEKU_STICK)) {
+        if (!(this->stateFlags1 & PLAYER_STATE1_SHIELDING) && (Player_GetMeleeWeaponHeld(this) != 0) &&
+            (this->unk_844 == 1) && (this->heldItemAction != PLAYER_IA_DEKU_STICK)) {
             // FD (2026-07-12) ★#6 hold-B STANCE FIX: FD's sword maps to the PLAYER_IA_SWORD_BIGGORON action, so this
             // Biggoron durability gate (swordHealth > 0) blocked the B-hold charge entirely for FD (his swordHealth
             // is 0 -- he doesn't own the real Biggoron sword). That is why "hold B does nothing" for FD. The FD sword
@@ -8556,17 +8558,16 @@ s32 Player_ActionHandler_2(Player* this, PlayState* play) {
                 // getting bombchus need to show the cutscene) and whenever the player doesn't have the item yet. In
                 // rando, we're overruling this because we need to keep showing the cutscene because those items can be
                 // randomized and thus it's important to keep showing the cutscene.
-                uint8_t showItemCutscene = play->sceneNum == SCENE_BOMBCHU_BOWLING_ALLEY || IS_RANDO ||
-                                           giEntry.modIndex == MOD_RANDOMIZER ||
-                                           // FD (2026-07-12) #3: ALWAYS play the full overhead-hold get sequence
-                                           // (+ custom fanfare) for the Fierce Deity's Mask. Otherwise, once you
-                                           // already own it, Item_CheckObtainability != ITEM_NONE makes this false
-                                           // -> the quick-give path (func_8083E4C4) fires with just the generic
-                                           // item chime and no fanfare (the reported "small get as if I already
-                                           // had it" bug; testing re-grants an owned mask). It's a unique item, so
-                                           // forcing the full sequence is always correct.
-                                           giEntry.itemId == ITEM_MASK_DEITY ||
-                                           Item_CheckObtainability(giEntry.itemId) == ITEM_NONE;
+                uint8_t showItemCutscene =
+                    play->sceneNum == SCENE_BOMBCHU_BOWLING_ALLEY || IS_RANDO || giEntry.modIndex == MOD_RANDOMIZER ||
+                    // FD (2026-07-12) #3: ALWAYS play the full overhead-hold get sequence
+                    // (+ custom fanfare) for the Fierce Deity's Mask. Otherwise, once you
+                    // already own it, Item_CheckObtainability != ITEM_NONE makes this false
+                    // -> the quick-give path (func_8083E4C4) fires with just the generic
+                    // item chime and no fanfare (the reported "small get as if I already
+                    // had it" bug; testing re-grants an owned mask). It's a unique item, so
+                    // forcing the full sequence is always correct.
+                    giEntry.itemId == ITEM_MASK_DEITY || Item_CheckObtainability(giEntry.itemId) == ITEM_NONE;
 
                 // Only skip cutscenes for drops when they're items/consumables from bushes/rocks/enemies.
                 uint8_t isDropToSkip =
@@ -10502,8 +10503,7 @@ s32 func_80842DF4(PlayState* play, Player* this) {
 
                 if (this->actor.colChkInfo.atHitEffect == 1) {
                     this->actor.colChkInfo.damage = 8;
-                    func_80837C0C(play, this, PLAYER_HIT_RESPONSE_ELECTRIFIED, 0.0f, 0.0f, this->actor.shape.rot.y,
-                                  20);
+                    func_80837C0C(play, this, PLAYER_HIT_RESPONSE_ELECTRIFIED, 0.0f, 0.0f, this->actor.shape.rot.y, 20);
                     return 1;
                 }
             }
@@ -12127,7 +12127,8 @@ void Player_Init(Actor* thisx, PlayState* play2) {
 
     thisx->room = -1;
     this->ageProperties = &sAgeProperties[gSaveContext.linkAge];
-    this->transformTargetForm = gSaveContext.linkAge; // FD (2026-07-11) 4d (light/maskObjectSegment = cutscene only, skipped)
+    this->transformTargetForm =
+        gSaveContext.linkAge; // FD (2026-07-11) 4d (light/maskObjectSegment = cutscene only, skipped)
     this->itemAction = this->heldItemAction = -1;
     this->heldItemId = ITEM_NONE;
 
@@ -13209,8 +13210,9 @@ void Player_UpdateCommon(Player* this, PlayState* play, Input* input) {
     FdOcarina_EnsurePinned();
 
     // FD (2026-07-12): interrupt the custom transform/revert WAV one-shots the instant the mask cutscene ends --
-    // natural completion OR an A-button skip (the skip just transitions the action away from Player_MaskTransformation).
-    // By a natural end the scream has already finished, so this only actually cuts sound on a skip.
+    // natural completion OR an A-button skip (the skip just transitions the action away from
+    // Player_MaskTransformation). By a natural end the scream has already finished, so this only actually cuts sound on
+    // a skip.
     {
         static u8 sFdTransformWasActive = 0;
         u8 nowActive = (this->actionFunc == Player_MaskTransformation);
@@ -13255,9 +13257,9 @@ void Player_UpdateCommon(Player* this, PlayState* play, Input* input) {
     if ((this->actor.category == ACTORCAT_PLAYER) && sFdTransformPending &&
         !(this->stateFlags3 & PLAYER_STATE3_TRANSFORMATION_MASK) && (play->ageChangeFlag < 0) &&
         (this->csAction == 0) && Player_CanUpdateItems(this) &&
-        !(this->stateFlags1 & (PLAYER_STATE1_IN_CUTSCENE | PLAYER_STATE1_INPUT_DISABLED |
-                               PLAYER_STATE1_CARRYING_ACTOR | PLAYER_STATE1_CLIMBING_LADDER |
-                               PLAYER_STATE1_HANGING_OFF_LEDGE | PLAYER_STATE1_CLIMBING_LEDGE))) {
+        !(this->stateFlags1 &
+          (PLAYER_STATE1_IN_CUTSCENE | PLAYER_STATE1_INPUT_DISABLED | PLAYER_STATE1_CARRYING_ACTOR |
+           PLAYER_STATE1_CLIMBING_LADDER | PLAYER_STATE1_HANGING_OFF_LEDGE | PLAYER_STATE1_CLIMBING_LEDGE))) {
         sFdTransformPending = false;
         Player_SetupMaskTransformation(play, this, sFdTransformPendingForm);
     }
@@ -13397,12 +13399,11 @@ void Player_UpdateCommon(Player* this, PlayState* play, Input* input) {
             if (LINK_IS_DEITY && CVarGetInteger(CVAR_ENHANCEMENT("TransformationMasks.StuckSafeguards"), 1)) {
                 // LOCATION_HAS_WATER_PROBLEMS: Zora's River room 1, Lost Woods, Water Temple room 0 NW quadrant
                 // (x < 536, z < 436), and the underwater grotto (ENTR_GROTTOS_11).
-                s32 hasWaterProblems =
-                    ((play->sceneNum == SCENE_ZORAS_RIVER) && (play->roomCtx.curRoom.num == 1)) ||
-                    (play->sceneNum == SCENE_LOST_WOODS) ||
-                    ((play->sceneNum == SCENE_WATER_TEMPLE) && (play->roomCtx.curRoom.num == 0) &&
-                     (this->actor.world.pos.x < 536.0f) && (this->actor.world.pos.z < 436.0f)) ||
-                    (gSaveContext.entranceIndex == ENTR_GROTTOS_11);
+                s32 hasWaterProblems = ((play->sceneNum == SCENE_ZORAS_RIVER) && (play->roomCtx.curRoom.num == 1)) ||
+                                       (play->sceneNum == SCENE_LOST_WOODS) ||
+                                       ((play->sceneNum == SCENE_WATER_TEMPLE) && (play->roomCtx.curRoom.num == 0) &&
+                                        (this->actor.world.pos.x < 536.0f) && (this->actor.world.pos.z < 436.0f)) ||
+                                       (gSaveContext.entranceIndex == ENTR_GROTTOS_11);
                 if (hasWaterProblems && (sFdWaterWarning == 0)) {
                     this->naviWarning = 0x71B5; // persistent -> re-armed into naviTextId above every frame
                     sFdWaterWarning = 1;
@@ -16878,10 +16879,10 @@ s32 Player_ActionHandler_7(Player* this, PlayState* play) {
                 // Incarnation) instead of always horizontal. The beam does not home -- pitch is fixed at spawn.
                 this->stateFlags2 |= PLAYER_STATE2_SPIN_ATTACKING;
                 {
-                    s16 beamPitch = (this->focusActor != NULL)
-                                        ? Math_Vec3f_Pitch(&this->bodyPartsPos[PLAYER_BODYPART_WAIST],
-                                                           &this->focusActor->focus.pos)
-                                        : 0;
+                    s16 beamPitch =
+                        (this->focusActor != NULL)
+                            ? Math_Vec3f_Pitch(&this->bodyPartsPos[PLAYER_BODYPART_WAIST], &this->focusActor->focus.pos)
+                            : 0;
                     func_80837530(play, this, 0x200, beamPitch);
                 }
                 return 1;

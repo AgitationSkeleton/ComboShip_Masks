@@ -148,8 +148,8 @@ void HandleSaveMenu(bool* should, PlayState* play) {
                                                &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
                         Play_SaveSceneFlags(play);
                         Sram_OpenSave();
-                        gSaveContext.entranceIndex = (fdEffAge == LINK_AGE_CHILD) ? ENTR_LINKS_HOUSE_CHILD_SPAWN
-                                                                                 : ENTR_TEMPLE_OF_TIME_WARP_PAD;
+                        gSaveContext.entranceIndex =
+                            (fdEffAge == LINK_AGE_CHILD) ? ENTR_LINKS_HOUSE_CHILD_SPAWN : ENTR_TEMPLE_OF_TIME_WARP_PAD;
                         if (IS_RANDO && Randomizer_GetSettingValue(RSK_SHUFFLE_OVERWORLD_SPAWNS)) {
                             if (fdEffAge == LINK_AGE_ADULT) {
                                 gSaveContext.entranceIndex = ENTR_HYRULE_FIELD_10;

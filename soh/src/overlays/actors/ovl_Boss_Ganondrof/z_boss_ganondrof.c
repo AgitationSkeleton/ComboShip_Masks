@@ -1195,8 +1195,7 @@ u8 BossGanondrof_FindSwordBeam(BossGanondrof* this, PlayState* play) {
     Actor* beam = play->actorCtx.actorLists[ACTORCAT_ITEMACTION].head;
 
     while (beam != NULL) {
-        if (EnMThunder_IsFdSwordBeam(beam) &&
-            (fabsf(beam->world.pos.x - this->actor.world.pos.x) < 40.0f) &&
+        if (EnMThunder_IsFdSwordBeam(beam) && (fabsf(beam->world.pos.x - this->actor.world.pos.x) < 40.0f) &&
             (fabsf(beam->world.pos.y - this->actor.world.pos.y) < 40.0f) &&
             (fabsf(beam->world.pos.z - this->actor.world.pos.z) < 40.0f)) {
             return true;

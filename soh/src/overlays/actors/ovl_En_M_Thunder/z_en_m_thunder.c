@@ -104,8 +104,8 @@ void EnMThunder_Init(Actor* thisx, PlayState* play2) {
             if (!gSaveContext.isMagicAcquired || (gSaveContext.magicState != MAGIC_STATE_IDLE) ||
                 (((this->actor.params & 0xFF00) >> 8) &&
                  !(Magic_RequestChange(play, (this->actor.params & 0xFF00) >> 8, MAGIC_CONSUME_NOW)))) {
-                Audio_PlaySoundGeneral(NA_SE_IT_ROLLING_CUT, &player->actor.projectedPos, 4, &gSfxDefaultFreqAndVolScale,
-                                       &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
+                Audio_PlaySoundGeneral(NA_SE_IT_ROLLING_CUT, &player->actor.projectedPos, 4,
+                                       &gSfxDefaultFreqAndVolScale, &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
                 Audio_PlaySoundGeneral(NA_SE_IT_SWORD_SWING_HARD, &player->actor.projectedPos, 4,
                                        &gSfxDefaultFreqAndVolScale, &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
                 Actor_Kill(&this->actor);
@@ -137,9 +137,9 @@ void EnMThunder_Init(Actor* thisx, PlayState* play2) {
             // (0x800) so the torch/web actors' existing fire checks fire. Because SoH resolves damage from the
             // HIGHEST set bit, the cheat also makes the beam do fire-arrow-tier generic damage instead of sword-tier
             // -- a documented, opt-in side effect that mirrors the aegiker composite's fire nature.
-            this->collider.info.toucher.dmgFlags =
-                CVarGetInteger(CVAR_CHEAT("TransformationMasks.FdBeamsLightFire"), 0) ? (DMG_SWORDBEAM | 0x800)
-                                                                                      : DMG_SWORDBEAM;
+            this->collider.info.toucher.dmgFlags = CVarGetInteger(CVAR_CHEAT("TransformationMasks.FdBeamsLightFire"), 0)
+                                                       ? (DMG_SWORDBEAM | 0x800)
+                                                       : DMG_SWORDBEAM;
             this->collider.info.toucher.damage = 3;
         }
         Audio_PlaySoundGeneral(NA_SE_IT_ROLLING_CUT_LV1, &player->actor.projectedPos, 4, &gSfxDefaultFreqAndVolScale,
@@ -404,8 +404,8 @@ void EnMThunder_Update(Actor* thisx, PlayState* play) {
     // FD (2026-07-12) #8: the environment-dimming is the vanilla GREAT-SPIN dramatic effect. For the Fierce Deity
     // sword BEAM projectile (subtype >= SWORDBEAM_GREAT) it reads as an unwanted world-darken on every swing, so skip
     // the dim for the beam -- only the real spin/charge dims the scene.
-    EnMThunder_AdjustEnvLights(
-        play, (this->subtype >= ENMTHUNDER_SUBTYPE_SWORDBEAM_GREAT) ? 0.0f : this->dimmingIntensity);
+    EnMThunder_AdjustEnvLights(play,
+                               (this->subtype >= ENMTHUNDER_SUBTYPE_SWORDBEAM_GREAT) ? 0.0f : this->dimmingIntensity);
     blueRadius = this->spinAttackTimer;
     redGreen = (u32)(blueRadius * 255.0f) & 0xFF;
     Lights_PointNoGlowSetInfo(&this->lightInfo, this->actor.world.pos.x, this->actor.world.pos.y,
@@ -445,105 +445,108 @@ void EnMThunder_Draw(Actor* thisx, PlayState* play2) {
         gSPDisplayList(POLY_XLU_DISP++, gUnusedBeamBladeDL);
     } else {
 
-    switch (this->attackStrength) {
-        case 0:
-        case 1:
-            gSPSegment(POLY_XLU_DISP++, 0x08,
-                       Gfx_TwoTexScrollEx(
-                           play->state.gfxCtx, 0, 0xFF - ((u8)(s32)(this->spinTrailTexScroll * 30) & 0xFF), 0, 0x40,
-                           0x20, 1, 0xFF - ((u8)(s32)(this->spinTrailTexScroll * 20) & 0xFF), 0, 8, 8, -30, 0, -20, 0));
-            break;
-    }
+        switch (this->attackStrength) {
+            case 0:
+            case 1:
+                gSPSegment(POLY_XLU_DISP++, 0x08,
+                           Gfx_TwoTexScrollEx(play->state.gfxCtx, 0,
+                                              0xFF - ((u8)(s32)(this->spinTrailTexScroll * 30) & 0xFF), 0, 0x40, 0x20,
+                                              1, 0xFF - ((u8)(s32)(this->spinTrailTexScroll * 20) & 0xFF), 0, 8, 8, -30,
+                                              0, -20, 0));
+                break;
+        }
 
-    switch (this->attackStrength) {
-        case 0:
+        switch (this->attackStrength) {
+            case 0:
+                if (CVarGetInteger(CVAR_COSMETIC("SpinAttack.Level2Primary.Changed"), 0)) {
+                    Color_RGB8 color =
+                        CVarGetColor24(CVAR_COSMETIC("SpinAttack.Level2Primary.Value"), (Color_RGB8){ 255, 255, 170 });
+                    gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, color.r, color.g, color.b,
+                                    (u8)(this->spinAttackAlpha * 255));
+                } else {
+                    gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, 255, 255, 170, (u8)(this->spinAttackAlpha * 255));
+                }
+                gSPDisplayList(POLY_XLU_DISP++, gSpinAttack3DL);
+                gSPDisplayList(POLY_XLU_DISP++, gSpinAttack4DL);
+                break;
+            case 1:
+                if (CVarGetInteger(CVAR_COSMETIC("SpinAttack.Level1Primary.Changed"), 0)) {
+                    Color_RGB8 color =
+                        CVarGetColor24(CVAR_COSMETIC("SpinAttack.Level1Primary.Value"), (Color_RGB8){ 170, 255, 255 });
+                    gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, color.r, color.g, color.b,
+                                    (u8)(this->spinAttackAlpha * 255));
+                } else {
+                    gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, 170, 255, 255, (u8)(this->spinAttackAlpha * 255));
+                }
+                gSPDisplayList(POLY_XLU_DISP++, gSpinAttack1DL);
+                gSPDisplayList(POLY_XLU_DISP++, gSpinAttack2DL);
+                break;
+        }
+
+        Matrix_Mult(&player->mf_9E0, MTXMODE_NEW);
+
+        switch (this->swordType) {
+            case 1:
+                Matrix_Translate(0.0f, 220.0f, 0.0f, MTXMODE_APPLY);
+                Matrix_Scale(-0.7f, -0.6f, -0.4f, MTXMODE_APPLY);
+                Matrix_RotateX(16384.0f, MTXMODE_APPLY);
+                break;
+            case 0:
+                Matrix_Translate(0.0f, 300.0f, -100.0f, MTXMODE_APPLY);
+                Matrix_Scale(-1.2f, -1.0f, -0.7f, MTXMODE_APPLY);
+                Matrix_RotateX(16384.0f, MTXMODE_APPLY);
+                break;
+            case 2:
+                Matrix_Translate(200.0f, 350.0f, 0.0f, MTXMODE_APPLY);
+                Matrix_Scale(-1.8f, -1.4f, -0.7f, MTXMODE_APPLY);
+                Matrix_RotateX(16384.0f, MTXMODE_APPLY);
+                break;
+        }
+
+        if (this->spinChargePercent >= 0.85f) {
+            phi_f14 = (sSpinChargeScale[(play->gameplayFrames & 7)] * 6.0f) + 1.0f;
             if (CVarGetInteger(CVAR_COSMETIC("SpinAttack.Level2Primary.Changed"), 0)) {
                 Color_RGB8 color =
                     CVarGetColor24(CVAR_COSMETIC("SpinAttack.Level2Primary.Value"), (Color_RGB8){ 255, 255, 170 });
-                gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, color.r, color.g, color.b, (u8)(this->spinAttackAlpha * 255));
+                gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, color.r, color.g, color.b, this->chargeAlpha);
             } else {
-                gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, 255, 255, 170, (u8)(this->spinAttackAlpha * 255));
+                gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, 255, 255, 170, this->chargeAlpha);
             }
-            gSPDisplayList(POLY_XLU_DISP++, gSpinAttack3DL);
-            gSPDisplayList(POLY_XLU_DISP++, gSpinAttack4DL);
-            break;
-        case 1:
+            if (CVarGetInteger(CVAR_COSMETIC("SpinAttack.Level2Secondary.Changed"), 0)) {
+                Color_RGB8 color =
+                    CVarGetColor24(CVAR_COSMETIC("SpinAttack.Level2Secondary.Value"), (Color_RGB8){ 255, 100, 0 });
+                gDPSetEnvColor(POLY_XLU_DISP++, color.r, color.g, color.b, 128);
+            } else {
+                gDPSetEnvColor(POLY_XLU_DISP++, 255, 100, 0, 128);
+            }
+            phi_t1 = 0x28;
+        } else {
+            phi_f14 = (sSpinChargeScale[play->gameplayFrames & 7] * 2.0f) + 1.0f;
             if (CVarGetInteger(CVAR_COSMETIC("SpinAttack.Level1Primary.Changed"), 0)) {
                 Color_RGB8 color =
                     CVarGetColor24(CVAR_COSMETIC("SpinAttack.Level1Primary.Value"), (Color_RGB8){ 170, 255, 255 });
-                gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, color.r, color.g, color.b, (u8)(this->spinAttackAlpha * 255));
+                gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, color.r, color.g, color.b, this->chargeAlpha);
             } else {
-                gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, 170, 255, 255, (u8)(this->spinAttackAlpha * 255));
+                gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, 170, 255, 255, this->chargeAlpha);
             }
-            gSPDisplayList(POLY_XLU_DISP++, gSpinAttack1DL);
-            gSPDisplayList(POLY_XLU_DISP++, gSpinAttack2DL);
-            break;
-    }
-
-    Matrix_Mult(&player->mf_9E0, MTXMODE_NEW);
-
-    switch (this->swordType) {
-        case 1:
-            Matrix_Translate(0.0f, 220.0f, 0.0f, MTXMODE_APPLY);
-            Matrix_Scale(-0.7f, -0.6f, -0.4f, MTXMODE_APPLY);
-            Matrix_RotateX(16384.0f, MTXMODE_APPLY);
-            break;
-        case 0:
-            Matrix_Translate(0.0f, 300.0f, -100.0f, MTXMODE_APPLY);
-            Matrix_Scale(-1.2f, -1.0f, -0.7f, MTXMODE_APPLY);
-            Matrix_RotateX(16384.0f, MTXMODE_APPLY);
-            break;
-        case 2:
-            Matrix_Translate(200.0f, 350.0f, 0.0f, MTXMODE_APPLY);
-            Matrix_Scale(-1.8f, -1.4f, -0.7f, MTXMODE_APPLY);
-            Matrix_RotateX(16384.0f, MTXMODE_APPLY);
-            break;
-    }
-
-    if (this->spinChargePercent >= 0.85f) {
-        phi_f14 = (sSpinChargeScale[(play->gameplayFrames & 7)] * 6.0f) + 1.0f;
-        if (CVarGetInteger(CVAR_COSMETIC("SpinAttack.Level2Primary.Changed"), 0)) {
-            Color_RGB8 color =
-                CVarGetColor24(CVAR_COSMETIC("SpinAttack.Level2Primary.Value"), (Color_RGB8){ 255, 255, 170 });
-            gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, color.r, color.g, color.b, this->chargeAlpha);
-        } else {
-            gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, 255, 255, 170, this->chargeAlpha);
+            if (CVarGetInteger(CVAR_COSMETIC("SpinAttack.Level1Secondary.Changed"), 0)) {
+                Color_RGB8 color =
+                    CVarGetColor24(CVAR_COSMETIC("SpinAttack.Level1Secondary.Value"), (Color_RGB8){ 0, 100, 255 });
+                gDPSetEnvColor(POLY_XLU_DISP++, color.r, color.g, color.b, 128);
+            } else {
+                gDPSetEnvColor(POLY_XLU_DISP++, 0, 100, 255, 128);
+            }
+            phi_t1 = 0x14;
         }
-        if (CVarGetInteger(CVAR_COSMETIC("SpinAttack.Level2Secondary.Changed"), 0)) {
-            Color_RGB8 color =
-                CVarGetColor24(CVAR_COSMETIC("SpinAttack.Level2Secondary.Value"), (Color_RGB8){ 255, 100, 0 });
-            gDPSetEnvColor(POLY_XLU_DISP++, color.r, color.g, color.b, 128);
-        } else {
-            gDPSetEnvColor(POLY_XLU_DISP++, 255, 100, 0, 128);
-        }
-        phi_t1 = 0x28;
-    } else {
-        phi_f14 = (sSpinChargeScale[play->gameplayFrames & 7] * 2.0f) + 1.0f;
-        if (CVarGetInteger(CVAR_COSMETIC("SpinAttack.Level1Primary.Changed"), 0)) {
-            Color_RGB8 color =
-                CVarGetColor24(CVAR_COSMETIC("SpinAttack.Level1Primary.Value"), (Color_RGB8){ 170, 255, 255 });
-            gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, color.r, color.g, color.b, this->chargeAlpha);
-        } else {
-            gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, 170, 255, 255, this->chargeAlpha);
-        }
-        if (CVarGetInteger(CVAR_COSMETIC("SpinAttack.Level1Secondary.Changed"), 0)) {
-            Color_RGB8 color =
-                CVarGetColor24(CVAR_COSMETIC("SpinAttack.Level1Secondary.Value"), (Color_RGB8){ 0, 100, 255 });
-            gDPSetEnvColor(POLY_XLU_DISP++, color.r, color.g, color.b, 128);
-        } else {
-            gDPSetEnvColor(POLY_XLU_DISP++, 0, 100, 255, 128);
-        }
-        phi_t1 = 0x14;
-    }
-    Matrix_Scale(1.0f, phi_f14, phi_f14, MTXMODE_APPLY);
-    gSPMatrix(POLY_XLU_DISP++, MATRIX_NEWMTX(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+        Matrix_Scale(1.0f, phi_f14, phi_f14, MTXMODE_APPLY);
+        gSPMatrix(POLY_XLU_DISP++, MATRIX_NEWMTX(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-    gSPSegment(POLY_XLU_DISP++, 0x09,
-               Gfx_TwoTexScrollEx(play->state.gfxCtx, 0, (play->gameplayFrames * 5) & 0xFF, 0, 0x20, 0x20, 1,
-                                  (play->gameplayFrames * 20) & 0xFF, (play->gameplayFrames * phi_t1) & 0xFF, 8, 8, 5,
-                                  0, 20, phi_t1));
+        gSPSegment(POLY_XLU_DISP++, 0x09,
+                   Gfx_TwoTexScrollEx(play->state.gfxCtx, 0, (play->gameplayFrames * 5) & 0xFF, 0, 0x20, 0x20, 1,
+                                      (play->gameplayFrames * 20) & 0xFF, (play->gameplayFrames * phi_t1) & 0xFF, 8, 8,
+                                      5, 0, 20, phi_t1));
 
-    gSPDisplayList(POLY_XLU_DISP++, gSpinAttackChargingDL);
+        gSPDisplayList(POLY_XLU_DISP++, gSpinAttackChargingDL);
 
     } // FD (2026-07-12): end else (vanilla spin/charge draw); beam path skips all of the above
 

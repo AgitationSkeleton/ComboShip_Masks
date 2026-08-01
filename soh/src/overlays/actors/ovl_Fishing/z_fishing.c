@@ -371,8 +371,9 @@ static s16 sRumbleDelay;
 static s16 sFishingMusicDelay;
 static Fishing* sFishingHookedFish;
 static s16 sFishingPlayingState;
-static u8 sFdScaryFaceNagged; // FD (aegiker RE->SoH port): latches the "scary face" owner nag so it fires once per approach
-static s16 sLureTimer; // AND'd for various effects/checks
+static u8
+    sFdScaryFaceNagged; // FD (aegiker RE->SoH port): latches the "scary face" owner nag so it fires once per approach
+static s16 sLureTimer;  // AND'd for various effects/checks
 static s16 D_80B7E0B0;
 static s16 D_80B7E0B2;
 static s16 sRodCastTimer; // used for the inital line casting

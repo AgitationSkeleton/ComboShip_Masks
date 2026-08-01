@@ -73,8 +73,7 @@ void OnGameFrameUpdateFdTunicColor() {
 
     // Skip when the desired state already matches what's applied (cheap common case).
     if (wantTint) {
-        if (sTintApplied && sAppliedColor.r == color.r && sAppliedColor.g == color.g &&
-            sAppliedColor.b == color.b) {
+        if (sTintApplied && sAppliedColor.r == color.r && sAppliedColor.g == color.g && sAppliedColor.b == color.b) {
             return;
         }
     } else if (!sTintApplied) {

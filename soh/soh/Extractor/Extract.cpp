@@ -105,8 +105,8 @@ static constexpr std::array<const uint32_t, 21> goodCrcs = {
 
 // FD (2026-07-16): Majora's Mask ROM identification, used only when mIsMM is set (fd.o2r generation).
 // Header CRCs (word[4]) and whole-ROM CRC32C values, matching 2 Ship 2 Harkinian's extractor.
-static constexpr uint32_t MM_US_10 = 0x5354631C; // header CRC, MM US 1.0 (N64)
-static constexpr uint32_t MM_US_GC = 0xB443EB08; // header CRC, MM US (GameCube)
+static constexpr uint32_t MM_US_10 = 0x5354631C;        // header CRC, MM US 1.0 (N64)
+static constexpr uint32_t MM_US_GC = 0xB443EB08;        // header CRC, MM US (GameCube)
 static constexpr uint32_t MM_US_10_ROMCRC = 0x96F49400; // CRC32C of whole 32MB N64 ROM
 static constexpr uint32_t MM_US_GC_ROMCRC = 0xBB434787; // CRC32C of GC ROM
 static const std::unordered_map<uint32_t, const char*> mmVerMap = {

@@ -145,16 +145,22 @@ static const std::array<const char*, 137> kFdRomDerivedPaths = {
 };
 
 static constexpr const char* kFdPatchedDlPath = "objects/object_gi_mask03/gGiFierceDeityMaskHairAndHatDL";
-struct FdBytePatch { uint32_t offset; uint8_t value; };
-static const std::array<FdBytePatch, 2> kFdPatchedDlBytes = {{
+struct FdBytePatch {
+    uint32_t offset;
+    uint8_t value;
+};
+static const std::array<FdBytePatch, 2> kFdPatchedDlBytes = { {
     { 425u, 0xfe },
     { 426u, 0x30 },
-}};
+} };
 
-struct FdRenamedResource { const char* src; const char* dst; };
+struct FdRenamedResource {
+    const char* src;
+    const char* dst;
+};
 // ROM-derived, byte-identical to an MM resource under a different name (voice grunts, MM_Jumps anim
 // data, swirl textures, HUD icons). Copied from the temp MM extract under the FD name.
-static const std::array<FdRenamedResource, 15> kFdRenamedRomPaths = {{
+static const std::array<FdRenamedResource, 15> kFdRenamedRomPaths = { {
     { "audio/samples/SAMPLE_0_167_META", "custom/fd_voice/09" },
     { "audio/samples/SAMPLE_0_169_META", "custom/fd_voice/0A" },
     { "audio/samples/SAMPLE_0_171_META", "custom/fd_voice/0B" },
@@ -164,13 +170,17 @@ static const std::array<FdRenamedResource, 15> kFdRenamedRomPaths = {{
     { "icon_item_static_yar/gItemIconFierceDeityMaskTex", "textures/icon_item_static/gFierceDeityMaskTex" },
     { "icon_item_static_yar/gItemIconFierceDeitySwordTex", "textures/icon_item_static/gFierceDeitySwordTex" },
     { "item_name_static/gItemNameFierceDeitysMaskENGTex", "textures/item_name_static/gFierceDeityMaskItemNameENGTex" },
-    { "misc/link_animetion/gPlayerAnim_link_normal_newroll_jump_20f_Data", "misc/link_animetion/mmjumps_front_flip_jump_data" },
-    { "misc/link_animetion/gPlayerAnim_link_normal_newroll_jump_end_20f_Data", "misc/link_animetion/mmjumps_front_flip_land_data" },
-    { "misc/link_animetion/gPlayerAnim_link_normal_newside_jump_20f_Data", "misc/link_animetion/mmjumps_somersault_jump_data" },
-    { "misc/link_animetion/gPlayerAnim_link_normal_newside_jump_end_20f_Data", "misc/link_animetion/mmjumps_somersault_land_data" },
+    { "misc/link_animetion/gPlayerAnim_link_normal_newroll_jump_20f_Data",
+      "misc/link_animetion/mmjumps_front_flip_jump_data" },
+    { "misc/link_animetion/gPlayerAnim_link_normal_newroll_jump_end_20f_Data",
+      "misc/link_animetion/mmjumps_front_flip_land_data" },
+    { "misc/link_animetion/gPlayerAnim_link_normal_newside_jump_20f_Data",
+      "misc/link_animetion/mmjumps_somersault_jump_data" },
+    { "misc/link_animetion/gPlayerAnim_link_normal_newside_jump_end_20f_Data",
+      "misc/link_animetion/mmjumps_somersault_land_data" },
     { "objects/gameplay_keep/gameplay_keep_Tex_054D90", "objects/gameplay_keep/gTransformEffectFirstTex" },
     { "objects/gameplay_keep/gameplay_keep_Tex_054E10", "objects/gameplay_keep/gTransformEffectSecondTex" },
-}};
+} };
 
 static const std::array<const char*, 35> kFdBundledPaths = {
     "custom/fonts/FD_GetAMask",

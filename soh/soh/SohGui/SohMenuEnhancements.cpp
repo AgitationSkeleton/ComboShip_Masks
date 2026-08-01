@@ -162,10 +162,16 @@ static const std::map<int32_t, const char*> mmFlipsFormValues = {
     { 0, "Off" }, { 1, "Child" }, { 2, "Child + Adult" }, { 3, "Fierce Deity" }, { 4, "All" },
 };
 static const std::map<int32_t, const char*> maskFitFormValues = {
-    { 0, "Off" }, { 1, "Adult" }, { 2, "Fierce Deity" }, { 3, "Both" },
+    { 0, "Off" },
+    { 1, "Adult" },
+    { 2, "Fierce Deity" },
+    { 3, "Both" },
 };
 static const std::map<int32_t, const char*> mmFormHumanFdValues = {
-    { 0, "Off" }, { 1, "Human" }, { 2, "Fierce Deity" }, { 3, "All" },
+    { 0, "Off" },
+    { 1, "Human" },
+    { 2, "Fierce Deity" },
+    { 3, "All" },
 };
 
 extern "C" void GiveFierceDeityMask(void); // FD: fierce_deity_items.c

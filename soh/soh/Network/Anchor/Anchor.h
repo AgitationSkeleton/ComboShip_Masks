@@ -72,7 +72,7 @@ typedef struct {
     s16 fdTransformTimer2;    // transformEventTimer2 (scream swirl alpha)
     u8 fdTransformAnimPrev;   // LOCAL-only: last frame's fdTransformAnim, to edge-detect transform start for audio
     f32 fdTransformCurFramePrev; // LOCAL-only: last frame's fdTransformCurFrame, to edge-detect the per-frame sfx beats
-    bool fdMaskGi;            // remote is holding up the FD-mask get-item -> dummy must draw the FD mask model, not Goron
+    bool fdMaskGi; // remote is holding up the FD-mask get-item -> dummy must draw the FD mask model, not Goron
 
     // Ptr to the dummy player
     Player* player;
@@ -93,7 +93,8 @@ class Anchor : public Network {
     uint32_t spawningDummyPlayerForClientId = 0;
     bool shouldRefreshActors = false;
     bool justLoadedSave = false;
-    bool prevHadFierceDeityMask = false; // FD (aegiker RE->SoH port): edge-detect the mask-obtain to relay it (HookHandlers)
+    bool prevHadFierceDeityMask =
+        false; // FD (aegiker RE->SoH port): edge-detect the mask-obtain to relay it (HookHandlers)
     bool isHandlingUpdateTeamState = false;
     bool isProcessingIncomingPacket = false;
     bool isDormantApply = false;  // true while PumpDormant applies packets (OOT backgrounded)

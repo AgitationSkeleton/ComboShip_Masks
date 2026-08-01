@@ -1852,8 +1852,7 @@ void BossGoma_UpdateHit(BossGoma* this, PlayState* play) {
                 this->invincibilityFrames = 10;
             } else if (this->actionFunc != BossGoma_FloorStunned && this->patienceTimer != 0 &&
                        // FD (aegiker RE->SoH port) BOSS PARITY: a Fierce Deity sword beam stuns Gohma from range.
-                       (acHitInfo->toucher.dmgFlags & 0x00000005 ||
-                        EnMThunder_IsFdSwordBeam(this->collider.base.ac))) {
+                       (acHitInfo->toucher.dmgFlags & 0x00000005 || EnMThunder_IsFdSwordBeam(this->collider.base.ac))) {
                 Audio_PlayActorSound2(&this->actor, NA_SE_EN_GOMA_DAM2);
                 Audio_StopSfxById(NA_SE_EN_GOMA_CRY1);
                 this->invincibilityFrames = 10;

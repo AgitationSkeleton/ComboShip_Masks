@@ -391,10 +391,9 @@ void KaleidoScope_HandleItemCycles(PlayState* play) {
 
     // FD (2026-07-11): Handle the Fierce Deity's Mask hosted on the first bottle slot.
     // CVar-gated for normal gameplay (defaults on); the helper is itself gated on having obtained the mask.
-    KaleidoScope_HandleItemCycleExtras(play, SLOT_BOTTLE_1,
-                                       CVarGetInteger(CVAR_ENHANCEMENT("TransformationMasks.Enabled"), 1),
-                                       Enhancement_GetPrevBottleDeityItem(), Enhancement_GetNextBottleDeityItem(),
-                                       true);
+    KaleidoScope_HandleItemCycleExtras(
+        play, SLOT_BOTTLE_1, CVarGetInteger(CVAR_ENHANCEMENT("TransformationMasks.Enabled"), 1),
+        Enhancement_GetPrevBottleDeityItem(), Enhancement_GetNextBottleDeityItem(), true);
 
     // FD (2026-07-12) #12: latch which face (mask vs bottle) the shared slot is showing this pause frame, so the
     // choice is remembered across pause/unpause (re-applied on the next open by ResetItemCycling below).

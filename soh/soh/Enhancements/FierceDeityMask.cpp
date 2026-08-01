@@ -39,14 +39,15 @@ static void RegisterFierceDeityMaskMessage() {
     // it to (C)" text), so wrap the [C] in %y..%w. '&' = CustomMessage newline.
     std::string fdMaskText = std::string("\x13", 1) + std::string(1, (char)ITEM_MASK_DEITY) +
                              "You got the %rFierce Deity's Mask%w!&Could this mask's dark powers&"
-                             "be as bad as Majora?&Try it on with %y" + std::string(1, (char)0xA1) + "%w.";
+                             "be as bad as Majora?&Try it on with %y" +
+                             std::string(1, (char)0xA1) + "%w.";
     cmm->CreateMessage(FIERCE_DEITY_MESSAGE_TABLE_ID, TEXT_FIERCE_DEITY_MASK,
                        CustomMessage(fdMaskText, TEXTBOX_TYPE_BLUE));
 
     // When the FD-mask acquisition textbox opens, serve the custom text instead of the vanilla table.
     COND_ID_HOOK(OnOpenText, TEXT_FIERCE_DEITY_MASK, true, [](u16* textId, bool* loadFromMessageTable) {
-        CustomMessage msg = CustomMessageManager::Instance->RetrieveMessage(
-            FIERCE_DEITY_MESSAGE_TABLE_ID, TEXT_FIERCE_DEITY_MASK, MF_FORMATTED);
+        CustomMessage msg = CustomMessageManager::Instance->RetrieveMessage(FIERCE_DEITY_MESSAGE_TABLE_ID,
+                                                                            TEXT_FIERCE_DEITY_MASK, MF_FORMATTED);
         *loadFromMessageTable = false;
         msg.LoadIntoFont();
     });
@@ -62,8 +63,7 @@ static void RegisterFierceDeityMaskMessage() {
     // LOAD: copy the FD-mask icon OTR path into the textbox segment, set 32x32 size, and (essential)
     // advance msgBufPos past the id byte ourselves. Leaves *should=false so vanilla LoadItemIcon stays off.
     COND_VB_SHOULD(VB_LOAD_ITEM_ICON, true, {
-        if (*should == false && gPlayState != NULL &&
-            gPlayState->msgCtx.textId == TEXT_FIERCE_DEITY_MASK) {
+        if (*should == false && gPlayState != NULL && gPlayState->msgCtx.textId == TEXT_FIERCE_DEITY_MASK) {
             MessageContext* msgCtx = &gPlayState->msgCtx;
             if ((u8)msgCtx->font.msgBuf[msgCtx->msgBufPos + 1] == ITEM_MASK_DEITY) {
                 bool displayAsEnglish = static_cast<bool>(va_arg(args, int));
@@ -81,14 +81,13 @@ static void RegisterFierceDeityMaskMessage() {
 
     // DRAW: emit the 32x32 RGBA texture block for the icon the LOAD hook staged into the segment.
     COND_VB_SHOULD(VB_DRAW_ITEM_ICON, true, {
-        if (*should == false && gPlayState != NULL &&
-            gPlayState->msgCtx.textId == TEXT_FIERCE_DEITY_MASK) {
+        if (*should == false && gPlayState != NULL && gPlayState->msgCtx.textId == TEXT_FIERCE_DEITY_MASK) {
             MessageContext* msgCtx = &gPlayState->msgCtx;
             Gfx** p = va_arg(args, Gfx**);
             Gfx* gfx = *p;
-            gDPLoadTextureBlock(gfx++, (uintptr_t)msgCtx->textboxSegment + MESSAGE_STATIC_TEX_SIZE,
-                                G_IM_FMT_RGBA, G_IM_SIZ_32b, 32, 32, 0, G_TX_NOMIRROR | G_TX_WRAP,
-                                G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
+            gDPLoadTextureBlock(gfx++, (uintptr_t)msgCtx->textboxSegment + MESSAGE_STATIC_TEX_SIZE, G_IM_FMT_RGBA,
+                                G_IM_SIZ_32b, 32, 32, 0, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP,
+                                G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
             *p = gfx;
         }
     });

@@ -75,8 +75,8 @@ static void RegisterTransformationMaskSafeguardMessages() {
         msg.LoadIntoFont();
     });
     COND_ID_HOOK(OnOpenText, TEXT_TRANSFORM_FISHING_SCARY, true, [](u16* textId, bool* loadFromMessageTable) {
-        CustomMessage msg = CustomMessageManager::Instance->RetrieveMessage(
-            TRANSFORM_MSG_TABLE_ID, TEXT_TRANSFORM_FISHING_SCARY, MF_FORMATTED);
+        CustomMessage msg = CustomMessageManager::Instance->RetrieveMessage(TRANSFORM_MSG_TABLE_ID,
+                                                                            TEXT_TRANSFORM_FISHING_SCARY, MF_FORMATTED);
         *loadFromMessageTable = false;
         msg.LoadIntoFont();
     });
