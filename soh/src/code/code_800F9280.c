@@ -39,15 +39,27 @@ u8 D_80133418 = 0;
 void Audio_StartSequence(u8 playerIdx, u8 seqId, u8 arg2, u16 fadeTimer) {
     u8 i;
     u16 dur;
+    u16 resolvedSeqId;
     s32 pad;
 
     if (D_80133408 == 0 || playerIdx == SEQ_PLAYER_SFX) {
+        // ComboShip: resolve here so the full 16-bit id rides in the command (bits 0-15) rather than the shared
+        // seqToPlay slot. seqReplaced is set out-of-band by preview/slow load. See AudioEditor_GetReplacementSeq().
+        // (Restored: the FD port had regressed this to the vanilla `_SHIFTL(seqId, 8, 8)` encoding, which drops the
+        // low byte and mis-encodes the id under ComboShip's audio system -> ALL game music went silent.)
+        if (gAudioContext.seqReplaced[playerIdx]) {
+            resolvedSeqId = gAudioContext.seqToPlay[playerIdx];
+            gAudioContext.seqReplaced[playerIdx] = 0;
+        } else {
+            resolvedSeqId = AudioEditor_GetReplacementSeq(seqId);
+        }
+
         arg2 &= 0x7F;
         if (arg2 == 0x7F) {
             dur = (fadeTimer >> 3) * 60 * gAudioContext.audioBufferParameters.updatesPerFrame;
-            Audio_QueueCmdS32(0x85000000 | _SHIFTL(playerIdx, 16, 8) | _SHIFTL(seqId, 8, 8), dur);
+            Audio_QueueCmdS32(0x85000000 | _SHIFTL(playerIdx, 16, 8) | (resolvedSeqId & 0xFFFF), dur);
         } else {
-            Audio_QueueCmdS32(0x82000000 | _SHIFTL(playerIdx, 16, 8) | _SHIFTL(seqId, 8, 8),
+            Audio_QueueCmdS32(0x82000000 | _SHIFTL(playerIdx, 16, 8) | (resolvedSeqId & 0xFFFF),
                               (fadeTimer * (u16)gAudioContext.audioBufferParameters.updatesPerFrame) / 4);
         }
 
