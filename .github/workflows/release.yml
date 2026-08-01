@@ -1,8 +1,9 @@
 name: Release
 
 # Cut a stable release from a v* tag (pushed on the main branch): runs the SAME reusable build
-# pipeline as nightly (build.yml), then publishes a DRAFT GitHub Release with the packaged ZIP
-# attached. Draft so you can review/edit notes before publishing. See docs/UPSTREAM_MERGES.md.
+# pipeline as nightly (build.yml), then publishes a public GitHub Release with the packaged ZIP
+# attached. Releases are reviewed/approved before the tag is pushed, so they publish directly (no
+# draft step). See docs/UPSTREAM_MERGES.md.
 
 on:
   push:
@@ -32,9 +33,9 @@ jobs:
           zip=$(ls dist/*.zip | head -1)
           mv "$zip" "dist/ComboShip-${GITHUB_REF_NAME}-windows.zip"
 
-      - name: Publish draft release
+      - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          draft: true
+          draft: false
           generate_release_notes: true
           files: dist/ComboShip-${{ github.ref_name }}-windows.zip
