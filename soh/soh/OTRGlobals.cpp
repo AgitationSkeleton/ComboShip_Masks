@@ -3661,6 +3661,17 @@ static std::atomic<bool> gComboExtractSuccess{ false };
 static std::future<void> gComboExtractFuture;
 static std::string gComboExtractRomPath;
 
+// FD (ComboShip): parallel state for the Fierce Deity fd.o2r generation slot in the extraction screen. Kept
+// separate from the OoT extraction state above because the FD slot is queued AFTER the OoT/MM ROM slots and
+// runs its own async job (FdO2rGen from the MM ROM). progressCount/Total are updated live by FdO2rGen's ZAPD
+// curated-extract step so the screen shows a real progress bar, matching the OoT/MM bars.
+static std::atomic<size_t> gFdExtractCount{ 0 };
+static std::atomic<size_t> gFdExtractTotal{ 0 };
+static std::atomic<bool> gFdExtractDone{ false };
+static std::atomic<bool> gFdExtractSuccess{ false };
+static std::future<void> gFdExtractFuture;
+static std::string gFdExtractMmRomPath;
+
 // Returns nonzero if romPath is a recognized OoT ROM (validation only, no dialog, no extraction).
 extern "C" __declspec(dllexport) int SOH_ValidateRom(const char* romPath) {
     if (!romPath) {
@@ -3725,6 +3736,65 @@ extern "C" __declspec(dllexport) void SOH_GetExtractionProgress(unsigned long lo
     }
     if (success) {
         *success = gComboExtractSuccess.load() ? 1 : 0;
+    }
+}
+
+// FD (ComboShip): generate fd.o2r (Fierce Deity assets) from the MM ROM as a QUEUED, progress-barred slot in the
+// extraction screen — mmRomPath is the same MM ROM the MM slot just extracted. Non-blocking (async job, like
+// SOH_StartExtraction); the screen polls FD_GetExtractionProgress for completion. If fd.o2r already exists, reports
+// immediate success. FdO2rGen is pure filesystem+ZAPD (no ResourceManager), so it is safe to run this early, before
+// OTRGlobals::Initialize. Once fd.o2r exists here, Initialize's own env-triggered generation is a no-op
+// (NeedsGeneration false) and just mounts it.
+extern "C" __declspec(dllexport) int FD_StartExtraction(const char* mmRomPath) {
+    if (!mmRomPath || mmRomPath[0] == '\0') {
+        return 0;
+    }
+    if (!FdO2rGen::NeedsGeneration(appShortName)) {
+        // fd.o2r already present — nothing to generate; complete the slot immediately.
+        gFdExtractCount = 1;
+        gFdExtractTotal = 1;
+        gFdExtractSuccess = true;
+        gFdExtractDone = true;
+        return 1;
+    }
+    if (gFdExtractFuture.valid() && gFdExtractFuture.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
+        return 0; // a job is still running
+    }
+    gFdExtractMmRomPath = mmRomPath;
+    gFdExtractCount = 0;
+    gFdExtractTotal = 0;
+    gFdExtractDone = false;
+    gFdExtractSuccess = false;
+    gFdExtractFuture = std::async(std::launch::async, []() {
+        bool ok = false;
+        try {
+            // FdO2rGen's autoMode reads SOH_FD_MM_ROM and skips every dialog; pass the live progress atomics so the
+            // curated-extract step drives the screen's FD progress bar.
+            _putenv_s("SOH_FD_MM_ROM", gFdExtractMmRomPath.c_str());
+            ok = FdO2rGen::Generate(Ship::Context::GetAppBundlePath(), Ship::Context::GetAppDirectoryPath(appShortName),
+                                    appShortName, &gFdExtractCount, &gFdExtractTotal);
+        } catch (...) {
+            ok = false; // a generation failure surfaces as done && !success, never crashes the launcher
+        }
+        gFdExtractSuccess = ok;
+        gFdExtractDone = true;
+    });
+    return 1;
+}
+
+extern "C" __declspec(dllexport) void FD_GetExtractionProgress(unsigned long long* count, unsigned long long* total,
+                                                               int* done, int* success) {
+    if (count) {
+        *count = (unsigned long long)gFdExtractCount.load();
+    }
+    if (total) {
+        *total = (unsigned long long)gFdExtractTotal.load();
+    }
+    if (done) {
+        *done = gFdExtractDone.load() ? 1 : 0;
+    }
+    if (success) {
+        *success = gFdExtractSuccess.load() ? 1 : 0;
     }
 }
 #endif

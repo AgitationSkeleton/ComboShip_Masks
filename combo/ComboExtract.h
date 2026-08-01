@@ -33,6 +33,15 @@ typedef struct ComboExtractCallbacks {
     ComboFnGetProgress mmProgress;
     int mmNeeded; // 1 if the MM ROM archive is missing and must be extracted
     ComboFnValidateRom mmClassify;
+
+    // FD (ComboShip): the Fierce Deity fd.o2r generation slot, queued AFTER the MM slot and reusing the MM ROM the
+    // player just provided (no separate ROM prompt). fdStart takes that MM ROM path; fdProgress polls like the others.
+    // fdNeeded is 1 only when fd.o2r is missing AND MM is being extracted this session (so an MM ROM path is
+    // available in-screen); the upgrade case (mm.o2r already present, fd.o2r missing) falls back to soh.dll's own
+    // env-triggered generation at init. fdStart/fdProgress may be null if soh.dll is too old to export them.
+    ComboFnStartExtraction fdStart;
+    ComboFnGetProgress fdProgress;
+    int fdNeeded;
 } ComboExtractCallbacks;
 
 // Implemented in comboui.dll (ComboExtractScreen.cpp). Blocks until every needed ROM is extracted

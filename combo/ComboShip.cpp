@@ -279,6 +279,9 @@ static ComboFnValidateRom MM_ValidateRom = nullptr;
 static ComboFnValidateRom MM_ClassifyRom = nullptr;
 static ComboFnStartExtraction MM_StartExtraction = nullptr;
 static ComboFnGetProgress MM_GetExtractionProgress = nullptr;
+// FD (ComboShip): fd.o2r generation slot (soh.dll exports; may be null on an older soh.dll).
+static ComboFnStartExtraction FD_StartExtraction = nullptr;
+static ComboFnGetProgress FD_GetExtractionProgress = nullptr;
 static ComboFnRunExtraction ComboUI_RunExtraction = nullptr;
 
 // ComboShip-owned first-launch settings import (see ComboSettingsImport.h). comboui renders the
@@ -2159,6 +2162,8 @@ int main(int argc, char** argv) {
     MM_ClassifyRom = (ComboFnValidateRom)GetSym(mmModule, "MM_ClassifyRom");
     MM_StartExtraction = (ComboFnStartExtraction)GetSym(mmModule, "MM_StartExtraction");
     MM_GetExtractionProgress = (ComboFnGetProgress)GetSym(mmModule, "MM_GetExtractionProgress");
+    FD_StartExtraction = (ComboFnStartExtraction)GetSym(sohModule, "FD_StartExtraction");
+    FD_GetExtractionProgress = (ComboFnGetProgress)GetSym(sohModule, "FD_GetExtractionProgress");
     SOH_ApplyImportedConfig = (ComboFnApplyImportedConfig)GetSym(sohModule, "SOH_ApplyImportedConfig");
 
     // Anchor transport seam exports (Phase 1)
@@ -2282,6 +2287,16 @@ int main(int argc, char** argv) {
         cb.mmStart = MM_StartExtraction;
         cb.mmProgress = MM_GetExtractionProgress;
         cb.mmNeeded = needMm ? 1 : 0;
+
+        // FD (ComboShip): queue fd.o2r (Fierce Deity assets) generation as a slot after MM, reusing the MM ROM the
+        // player provides — but only when MM is being extracted this session (so the ROM path is available) and
+        // soh.dll actually exports the FD primitives. The upgrade case (mm.o2r already present, fd.o2r missing) keeps
+        // fdNeeded=0 and is handled by soh.dll's own env-triggered generation at init.
+        const bool needFd =
+            !std::filesystem::exists("fd.o2r") && needMm && FD_StartExtraction && FD_GetExtractionProgress;
+        cb.fdStart = FD_StartExtraction;
+        cb.fdProgress = FD_GetExtractionProgress;
+        cb.fdNeeded = needFd ? 1 : 0;
 
         if (!ComboUI_RunExtraction(&cb)) {
             std::cerr << "[ComboShip] Extraction cancelled or failed — exiting." << std::endl;

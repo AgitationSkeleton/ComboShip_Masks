@@ -330,6 +330,16 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
     install(DIRECTORY "${CMAKE_SOURCE_DIR}/soh/assets/xml/"       DESTINATION ./assets/xml COMPONENT combo)
     install(DIRECTORY "${CMAKE_SOURCE_DIR}/mm/assets/extractor/"  DESTINATION ./assets     COMPONENT combo)
     install(DIRECTORY "${CMAKE_SOURCE_DIR}/mm/assets/xml/"        DESTINATION ./assets/xml COMPONENT combo)
+
+    # FD (ComboShip): the Fierce Deity fd.o2r generator needs these at runtime ON THE USER'S MACHINE, so they must
+    # ship in the packaged release. fd_xml is the curated minimal MM XML subset ZAPD extracts from the player's own
+    # MM ROM (assets/fd_xml/<ver>, see Extract.cpp:741); fd_bundled holds the prebuilt non-Nintendo FD resources
+    # merged into fd.o2r (installPath + "/assets/fd_bundled/", see FdO2rGen.cpp:376). These previously existed only
+    # as POST_BUILD copies into the local build dir (soh/CMakeLists.txt) -- so a from-source dev build could generate
+    # fd.o2r but a DOWNLOADED release could NOT (cpack packages install() rules, not POST_BUILD output), leaving the
+    # Fierce Deity form permanently ungeneratable and crashing on first FD access. Ship them beside the extractor.
+    install(DIRECTORY "${CMAKE_SOURCE_DIR}/soh/assets/fd_xml/"     DESTINATION ./assets/fd_xml     COMPONENT combo)
+    install(DIRECTORY "${CMAKE_SOURCE_DIR}/soh/assets/fd_bundled/" DESTINATION ./assets/fd_bundled COMPONENT combo)
 endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Windows|NintendoSwitch|CafeOS")

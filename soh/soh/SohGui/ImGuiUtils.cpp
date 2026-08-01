@@ -241,6 +241,15 @@ void RegisterImGuiItemIcons() {
     }
 
     for (const auto& entry : customItemsMapping) {
+        // FD (ComboShip): the Fierce Deity mask icon (gFierceDeityMaskTex) lives in fd.o2r, which is generated from
+        // the player's Majora's Mask ROM and is ABSENT on first launch (before extraction). LoadGuiTexture crashes
+        // (null deref) on a missing resource, so skip any custom entry whose texture isn't mounted yet — it will
+        // register on the next launch once fd.o2r exists. Base-texture entries (Triforce, Roc's Feather, boss souls)
+        // are always present, so this only ever skips the FD icon pre-generation.
+        if (!Ship::Context::GetRawInstance()->GetResourceManager()->GetArchiveManager()->HasFile(
+                entry.second.texturePath)) {
+            continue;
+        }
         std::dynamic_pointer_cast<Fast::Fast3dGui>(Ship::Context::GetRawInstance()->GetWindow()->GetGui())
             ->LoadGuiTexture(entry.second.name, entry.second.texturePath, ImVec4(1, 1, 1, 1));
         std::dynamic_pointer_cast<Fast::Fast3dGui>(Ship::Context::GetRawInstance()->GetWindow()->GetGui())

@@ -210,7 +210,8 @@ bool FdO2rGen::NeedsGeneration(const std::string& appShortName) {
     return !std::filesystem::exists(Ship::Context::LocateFileAcrossAppDirs("fd.o2r", appShortName));
 }
 
-bool FdO2rGen::Generate(const std::string& installPath, const std::string& dataPath, const std::string& appShortName) {
+bool FdO2rGen::Generate(const std::string& installPath, const std::string& dataPath, const std::string& appShortName,
+                        std::atomic<size_t>* progressCount, std::atomic<size_t>* progressTotal) {
     // Automation hook (headless / CI): if SOH_FD_MM_ROM points at a Majora's Mask ROM, skip all dialogs and
     // generate fd.o2r from it directly.
     const char* autoRom = std::getenv("SOH_FD_MM_ROM");
@@ -264,9 +265,13 @@ bool FdO2rGen::Generate(const std::string& installPath, const std::string& dataP
     }
 
     // 3. ZAPD-extract the curated MM subset (8 XMLs) to a temporary archive.
-    std::atomic<size_t> extractCount{ 0 };
-    std::atomic<size_t> totalExtract{ 0 };
-    std::string tempFull = extract.ExtractCuratedToTemp(installPath, &extractCount, &totalExtract);
+    // Use the caller's progress atomics when provided (drives the ComboShip extraction-screen FD slot's bar);
+    // otherwise fall back to local ones so the silent OTRGlobals::Initialize path still works unchanged.
+    std::atomic<size_t> localCount{ 0 };
+    std::atomic<size_t> localTotal{ 0 };
+    std::atomic<size_t>* extractCount = progressCount ? progressCount : &localCount;
+    std::atomic<size_t>* totalExtract = progressTotal ? progressTotal : &localTotal;
+    std::string tempFull = extract.ExtractCuratedToTemp(installPath, extractCount, totalExtract);
     if (tempFull.empty() || !std::filesystem::exists(tempFull)) {
         if (!autoMode) {
             Extractor::ShowErrorBox(

@@ -113,7 +113,10 @@ extern "C" __declspec(dllexport) int ComboUI_RunExtraction(const ComboExtractCal
     auto gui = wnd->GetGui();
     UseSharedImGuiContext();
 
-    RomSlot slots[2];
+    // slots[0]=OoT, slots[1]=MM are player-provided ROMs (PICK phase). slots[2]=Fierce Deity (fd.o2r) is NOT
+    // player-picked — it is generated from the MM ROM slots[1] just provided, so it only appears in the EXTRACTING
+    // phase, queued after MM. (See ComboExtract.h / ComboShip.cpp fdNeeded.)
+    RomSlot slots[3];
     slots[0].label = "Ocarina of Time";
     slots[0].needed = cb->sohNeeded != 0;
     slots[0].validate = cb->sohValidate;
@@ -126,6 +129,12 @@ extern "C" __declspec(dllexport) int ComboUI_RunExtraction(const ComboExtractCal
     slots[1].classify = cb->mmClassify;
     slots[1].start = cb->mmStart;
     slots[1].progress = cb->mmProgress;
+    slots[2].label = "Fierce Deity";
+    slots[2].needed = cb->fdNeeded != 0;
+    slots[2].start = cb->fdStart;
+    slots[2].progress = cb->fdProgress;
+    slots[2].valid =
+        true; // auto (no user ROM to pick/validate) — keeps it out of the PICK UI + auto-scan + ready-check
 
     // Auto-scan the working directory and classify any ROMs found into the needed slots.
     {
@@ -268,9 +277,10 @@ extern "C" __declspec(dllexport) int ComboUI_RunExtraction(const ComboExtractCal
                 ComboMenu_PopButton();
             } else if (phase == EXTRACTING) {
                 if (activeSlot < 0) {
-                    // Pick the next needed-but-unfinished slot, or finish.
+                    // Pick the next needed-but-unfinished slot, or finish. Includes the FD slot (index 2), which is
+                    // queued last so it runs after the MM ROM it depends on is extracted.
                     int next = -1;
-                    for (int i = 0; i < 2; i++) {
+                    for (int i = 0; i < 3; i++) {
                         if (slots[i].needed && !slots[i].done) {
                             next = i;
                             break;
@@ -291,11 +301,17 @@ extern "C" __declspec(dllexport) int ComboUI_RunExtraction(const ComboExtractCal
                         }
                     } else {
                         // FD (ComboShip): when the Majora's Mask ROM (slot 1) extraction begins, hand its path to
-                        // soh.dll via SOH_FD_MM_ROM so fd.o2r (Fierce Deity assets) is generated silently from the
-                        // SAME ROM at OoT-side init (OTRGlobals reads this env var). Shared dynamic CRT (-md) makes
-                        // it visible across DLLs. No separate MM prompt — reuses ComboShip's own MM extraction.
+                        // soh.dll via SOH_FD_MM_ROM. This is a FALLBACK for the upgrade case (fd.o2r missing but the
+                        // FD slot isn't queued) so OTRGlobals::Initialize can still generate it silently; when the FD
+                        // slot IS queued (fresh first-run) it generates fd.o2r first and Initialize just mounts it.
+                        // Shared dynamic CRT (-md) makes the env var visible across DLLs.
                         if (next == 1 && !slots[next].path.empty()) {
                             _putenv_s("SOH_FD_MM_ROM", slots[next].path.c_str());
+                        }
+                        // FD slot (index 2) is not player-picked: feed it the MM ROM path the MM slot just used, so
+                        // FdO2rGen generates fd.o2r from the same ROM. (MM ran first, so slots[1].path is set.)
+                        if (next == 2) {
+                            slots[2].path = slots[1].path;
                         }
                         activeSlot = next;
                         slots[next].started = slots[next].start && slots[next].start(slots[next].path.c_str());
