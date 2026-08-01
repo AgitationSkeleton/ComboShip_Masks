@@ -1280,7 +1280,12 @@ static void FdVoice_LoadSamples() {
 // vtx/tex; loading those lazily mid-draw (especially after the fairy path churns the resource cache) can fail. By
 // loading them once here on the game thread and holding a shared_ptr (so they can never be evicted), every
 // draw-time lookup becomes a cache hit. Idempotent; retries until all five are resident.
-static std::vector<std::shared_ptr<Ship::IResource>> sFdOcarinaPins;
+// Heap-allocated and intentionally never destroyed: these IResource pins outlive libultraship's ResourceManager
+// and logger, so a static-duration destructor running at process exit (atexit) would release them AFTER the logger
+// is gone -> Ship::IResource::~IResource logs to a dead spdlog sink -> access violation on shutdown (observed in
+// ComboShip's late-crash handler). Leaking at process exit is harmless; the OS reclaims the memory.
+static std::vector<std::shared_ptr<Ship::IResource>>& sFdOcarinaPins =
+    *new std::vector<std::shared_ptr<Ship::IResource>>();
 static bool sFdOcarinaPinned = false;
 extern "C" void FdOcarina_EnsurePinned(void) {
     if (sFdOcarinaPinned) {
@@ -4001,11 +4006,43 @@ static std::set<RandomizerCheck> Combo_ParseExcludedLocations() {
     return excluded;
 }
 
+// ComboShip: entrance randomization (dungeon/boss/grotto/interior/overworld/owl/warp/spawn/...) is NOT supported by
+// the cross-game combined fill — with any of it on, most entrance layouts structurally strand a chunk of OOT checks
+// under All-Locations-Reachable, so generation fails on every reroll. ComboShip's randomizer menu deliberately omits
+// these toggles, but an imported standalone-SoH config can still carry the CVars ON, which then silently breaks every
+// generation. Force the whole entrance-shuffle family OFF in the combo rando context (after CVars are loaded into
+// options by SetAllToContext, before FinalizeSettings derives the master toggle), so an imported config generates
+// cleanly — just without entrance shuffle — instead of failing. Warns once so the player knows it was ignored.
+static void Combo_DisableUnsupportedEntranceShuffle() {
+    auto ctx = OTRGlobals::Instance->gRandoContext;
+    static const RandomizerSettingKey kEntranceKeys[] = {
+        RSK_SHUFFLE_ENTRANCES,           RSK_SHUFFLE_DUNGEON_ENTRANCES,         RSK_SHUFFLE_BOSS_ENTRANCES,
+        RSK_SHUFFLE_GANONS_TOWER_ENTRANCE, RSK_SHUFFLE_OVERWORLD_ENTRANCES,     RSK_SHUFFLE_INTERIOR_ENTRANCES,
+        RSK_SHUFFLE_THIEVES_HIDEOUT_ENTRANCES, RSK_SHUFFLE_GROTTO_ENTRANCES,    RSK_SHUFFLE_OWL_DROPS,
+        RSK_SHUFFLE_WARP_SONGS,          RSK_SHUFFLE_OVERWORLD_SPAWNS,          RSK_MIXED_ENTRANCE_POOLS,
+        RSK_DECOUPLED_ENTRANCES,
+    };
+    bool anyOn = false;
+    for (RandomizerSettingKey k : kEntranceKeys) {
+        if (ctx->GetOption(k).Get() != 0) {
+            anyOn = true;
+        }
+        ctx->GetOption(k).Set((uint8_t)0); // index 0 = Off/Vanilla for every entrance option
+    }
+    static bool warned = false;
+    if (anyOn && !warned) {
+        warned = true;
+        SPDLOG_WARN("[ComboShip] Entrance randomization is not supported by the cross-game randomizer; the imported "
+                    "entrance-shuffle settings were ignored for generation.");
+    }
+}
+
 extern "C" __declspec(dllexport) void SOH_PrepRandoContext(void) {
     try {
         auto ctx = OTRGlobals::Instance->gRandoContext;
         Rando::Settings::GetInstance()->SetAllToContext();
         Combo_ApplyEnabledTricks();
+        Combo_DisableUnsupportedEntranceShuffle(); // ComboShip: entrance shuffle unsupported in the combo fill
         ctx->GetLogic()->Reset();
         ctx->FinalizeSettings(Combo_ParseExcludedLocations(), {});
         RegionTable_Init();
@@ -4974,6 +5011,7 @@ static void EnsureOracleInit() {
     auto ctx = OTRGlobals::Instance->gRandoContext;
     Rando::Settings::GetInstance()->SetAllToContext(); // ComboShip: apply chosen CVar settings before finalizing
     Combo_ApplyEnabledTricks();                        // ComboShip: honor the player's tricks (see helper)
+    Combo_DisableUnsupportedEntranceShuffle();         // ComboShip: entrance shuffle unsupported in the combo fill
     ctx->GetLogic()->Reset();
     ctx->FinalizeSettings(Combo_ParseExcludedLocations(), {});
     RegionTable_Init();
