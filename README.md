@@ -1,34 +1,35 @@
-# ComboShip
+# ComboShip Masks
 
-**ComboShip is a cross-game randomizer for [Ship of Harkinian](https://github.com/HarbourMasters/Shipwright) (Ocarina of Time) and [2 Ship 2 Harkinian](https://github.com/HarbourMasters/2ship2harkinian) (Majora's Mask).**
+**A fork of ComboShip that adds Transformation Masks — the Fierce Deity for now — and a handful of bonus features to the Ocarina of Time side of its cross-game OoT ↔ MM randomizer.**
 
-**DISCLAIMER: THIS IS AN UNOFFICIAL PROJECT AND USES AI AS PART OF THE DEVELOPMENT. IT IS NOT CREATED OR HANDLED BY THE HARBOUR MASTERS TEAM. BRING ANY IDEAS, QUESTIONS, OR CONCERNS TO ME DIRECTLY!**
+> **Unofficial fork.** This is built on ComboShip, which is itself an unofficial cross-game randomizer for [Ship of Harkinian](https://github.com/HarbourMasters/Shipwright) (Ocarina of Time) and [2 Ship 2 Harkinian](https://github.com/HarbourMasters/2ship2harkinian) (Majora's Mask). It is not affiliated with or supported by the Harbour Masters team or the ComboShip developers, and development uses AI assistance. Please report problems with this fork here — not to any of the upstream projects.
 
-## What it is
+## The base: what ComboShip is
 
-Like [OOTMM](https://ootmm.com/), ComboShip shuffles items across *both* games at once: a check in Ocarina of Time can hold a Majora's Mask item and vice-versa, and a single seed spans the two. Both games run together in one application; ComboShip builds that combined runtime on top of the existing Ship of Harkinian and 2 Ship 2 Harkinian ports.
+Like [OOTMM](https://ootmm.com/), ComboShip shuffles items across *both* games at once: a check in Ocarina of Time can hold a Majora's Mask item and vice-versa, and a single seed spans the two. Both games run together in one application, built on top of the existing Ship of Harkinian and 2 Ship 2 Harkinian ports. Everything those three projects already do — the combined randomizer, cross-game Anchor multiplayer, all the Ship/2 Ship enhancements — is still here in this fork.
 
-## Features
+## What this fork adds
 
-- Anything within Ship and 2Ship is here. When those projects gets new updates, they are not far from inclusion here.
-- Online Multiplayer through Anchor. And yes it works cross-game as well. Work together in OOT and MM, split or together.
-- **Transformation Masks in Ocarina of Time.** This fork ports [aegiker's Fierce Deity work](https://github.com/AgitationSkeleton/soh_fd) into ComboShip's OoT side, so Link can wear the **Fierce Deity's Mask** and fight as the Fierce Deity in Ocarina of Time — the same shared mask the randomizer already places in Majora's Mask. Obtaining it in either game grants it in both.
-  - **Enhancements → Transformation Masks** menu: *Give Fierce Deity's Mask* button, form rules (stuck-safeguards, restricted-action prompts), Fierce-Deity toggles (usable anywhere, play ocarina, sheathe sword, magic spin, increased strength, unrestrict items), and a **Fierce Deity Tunic Color** cosmetic (also in Cosmetics Editor → Link).
+- **Transformation Masks in Ocarina of Time (Fierce Deity for now).** This fork ports [aegiker's Fierce Deity work](https://github.com/AgitationSkeleton/soh_fd) into ComboShip's OoT side, so Link can wear the **Fierce Deity's Mask** and fight as the Fierce Deity in Ocarina of Time — transform cutscene, sword beams, and boss/enemy parity included.
+  - **Shared across both games.** The Fierce Deity's Mask is the same mask the randomizer already places in Majora's Mask: obtaining it in *either* game unlocks the Fierce Deity form in *both* (on by default; toggle under **Enhancements → Transformation Masks**). If you start with it in one game, you start with it in the other.
+  - **Enhancements → Transformation Masks** menu: a *Give Fierce Deity's Mask* button, form rules (stuck-safeguards, restricted-action prompts), and Fierce-Deity toggles (usable anywhere, play ocarina, sheathe sword, magic spin, increased strength, unrestrict items). Tint the tunic in **Cosmetics Editor → Link → "Fierce Deity Tunic"**.
   - **Enhancements → Bonus Settings**: Majora's-Mask-flavored extras — MM jump flips, MM ledge momentum, MM roll-attack damage, Young Link hookshot sound, and a **Bunny Hood Fit** correction so the hood sits right on the taller Adult / Fierce Deity heads.
-  - The Fierce Deity model and audio ship inside `fd.o2r`, generated once at first launch from your Majora's Mask ROM (the same ROM ComboShip already asks for) — no extra prompt.
+  - **No assets bundled.** The Fierce Deity model and audio (`fd.o2r`) are generated once at first launch from your own Majora's Mask ROM — the same ROM ComboShip already asks for, with no extra prompt.
 
-## Future plans
+More transformation masks may follow; the Fierce Deity is the first.
 
-- Possibly looking into some more OOTMM features, but it's not a priority yet.
-- Possible Archipelago support as well, ideally through the existing SoH implementation
+## Notes and known limitations
 
-## Any bugs?
+- **Windows only** (matches upstream ComboShip).
+- **Entrance randomization** (dungeon/boss/grotto/etc.) is not supported by ComboShip's cross-game fill. If a config you import turns it on, it is ignored during generation (with a one-time warning) so seeds still generate.
 
-Probably many! Create an issue if you find any.
+## Bugs
+
+Probably some! Please open an issue on this repository if you find one.
 
 ## Building
 
-ComboShip currently builds on **Windows** only. macOS and Linux support will return later.
+This fork builds on **Windows** only.
 
 ### Prerequisites
 
@@ -58,15 +59,17 @@ Helper scripts in `scripts/` wrap `cmake --build` and default to a Debug build (
 cpack
 ```
 
-## Contributing
+## Credits
 
-ComboShip is built on two upstream projects, kept as vendored copies under `soh/` and `mm/`:
+This fork stands on:
 
-- Ship of Harkinian — https://github.com/HarbourMasters/Shipwright
-- 2 Ship 2 Harkinian — https://github.com/HarbourMasters/2ship2harkinian
+- **ComboShip** — the cross-game OoT ↔ MM randomizer this is forked from. <!-- TODO: link the upstream ComboShip repo here -->
 
-ComboShip-specific code lives in `combo/`, and changes to the vendored ports are kept minimal and guarded behind `COMBO_BUILD`. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the design and [`docs/UPSTREAM_MERGES.md`](docs/UPSTREAM_MERGES.md) for how upstream changes are merged in.
+- **[Ship of Harkinian](https://github.com/HarbourMasters/Shipwright)** and **[2 Ship 2 Harkinian](https://github.com/HarbourMasters/2ship2harkinian)** — the underlying ports, vendored under `soh/` and `mm/`.
+- **[aegiker's soh_fd](https://github.com/AgitationSkeleton/soh_fd)** — the Fierce Deity / Transformation Mask implementation ported here.
+
+ComboShip-specific code lives in `combo/`, and changes to the vendored ports are kept minimal and guarded behind `COMBO_BUILD`. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/UPSTREAM_MERGES.md`](docs/UPSTREAM_MERGES.md).
 
 ## License
 
-ComboShip combines two separately-licensed projects; each retains its own license. See the `soh/` and `mm/` directories for details.
+This project combines separately-licensed upstream projects; each retains its own license. See the `soh/` and `mm/` directories for details.
