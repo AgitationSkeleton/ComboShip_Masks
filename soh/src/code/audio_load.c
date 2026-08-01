@@ -1340,6 +1340,26 @@ void AudioLoad_Init(void* heap, size_t heapSize) {
     int customSeqListSize = 0;
     char** seqList = ResourceMgr_ListFiles("audio/sequences*", &seqListSize);
     char** customSeqList = ResourceMgr_ListFiles("custom/music/*", &customSeqListSize);
+    // ComboShip (FD fork): the custom/music/FD_* resources in fd.o2r are internal Fierce Deity cutscene audio
+    // (transform screams / face-change / mask-attach / flash / get-mask jingle) that is played via the direct-WAV
+    // mixer (FdAudio_PlayOneShot, custom/samples/fd/*.wav) and NEVER through the N64 sequence player. Registering
+    // them as streamed sequences here perturbs ComboShip's reworked sequence-map / BGM guard (see the seqId range +
+    // sequenceMap NULL check below, which soh_fd's simpler path lacks) and silences all game music. Drop them from
+    // the sequence registration entirely — they are dead weight for playback. (soh_fd tolerated them because it kept
+    // the original decomp guard; ComboShip's stricter one does not.)
+    {
+        int fdKept = 0;
+        for (int i = 0; i < customSeqListSize; i++) {
+            const char* slash = strrchr(customSeqList[i], '/');
+            const char* base = slash ? slash + 1 : customSeqList[i];
+            if (strncmp(base, "FD_", 3) == 0) {
+                free(customSeqList[i]);
+            } else {
+                customSeqList[fdKept++] = customSeqList[i];
+            }
+        }
+        customSeqListSize = fdKept;
+    }
     sequenceMapSize = (size_t)(seqListSize + customSeqListSize);
     // calloc: unassigned slots stay NULL for the guard in AudioLoad_SyncInitSeqPlayerInternal().
     sequenceMap = calloc(sequenceMapSize + 0xF, sizeof(char*));
